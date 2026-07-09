@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Avanzado de Ciencias Exactas y Física Universitaria</title>
+    <title>Simulador de Ciencias Exactas - 100 Reactivos Únicos</title>
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -12,77 +12,55 @@
             <div class="brand">
                 <span class="brand-icon">⚛️</span>
                 <div>
-                    <h1>Plataforma de Evaluación Politécnica</h1>
-                    <p>Módulo de Aptitud Científica y Razonamiento Físico-Matemático</p>
+                    <h1>Plataforma de Evaluación de Ciencias Exactas</h1>
+                    <p>Módulo de Aptitud Académica - 100 Ejercicios Sin Repetición</p>
                 </div>
             </div>
             <div class="stats-overview">
-                <div class="stat-badge">Reactivos: <span id="globalTotal">100</span></div>
+                <div class="stat-badge">Total: <span id="globalTotal">100</span></div>
                 <div class="stat-badge correct">Aciertos: <span id="globalCorrect">0</span></div>
                 <div class="stat-badge incorrect">Errores: <span id="globalIncorrect">0</span></div>
             </div>
         </div>
     </header>
-
     <main class="app-viewport">
-        <!-- PANEL IZQUIERDO: MATRIZ DE NAVEGACIÓN LIBRE -->
         <aside class="sidebar-panel">
             <div class="dashboard-card">
                 <div class="card-header">
                     <h2>Matriz de Reactivos</h2>
-                    <span class="card-subtitle">Navegación libre y diagnóstico</span>
+                    <span class="card-subtitle">Navegación libre (1 - 100)</span>
                 </div>
-                
-                <div class="status-legend">
-                    <div class="legend-item"><span class="indicator-dot pending"></span> Pendiente</div>
-                    <div class="legend-item"><span class="indicator-dot correct"></span> Correcto</div>
-                    <div class="legend-item"><span class="indicator-dot incorrect"></span> Incorrecto</div>
-                </div>
-
                 <div class="matrix-scroll">
                     <div class="matrix-grid" id="matrixGrid"></div>
                 </div>
             </div>
         </aside>
-
-        <!-- PANEL DERECHO: ÁREA DINÁMICA DE EVALUACIÓN -->
         <section class="workspace-panel">
             <div class="dashboard-card main-card">
                 <div class="workspace-top">
-                    <span class="category-badge" id="questionCategory">Cargando categoría...</span>
-                    <span class="reactivo-id" id="questionIdLabel">Reactivo #--</span>
+                    <span class="category-badge" id="questionCategory">Seleccione una pregunta</span>
+                    <span class="reactivo-id" id="questionIdLabel">Reactivo #000</span>
                 </div>
-
                 <div class="workspace-content">
                     <div class="question-box">
-                        <p class="question-text" id="questionText">Seleccione un reactivo de la matriz para iniciar la evaluación analítica.</p>
+                        <p class="question-text" id="questionText">Cargando el banco de reactivos...</p>
                     </div>
-                    
-                    <!-- BARRA DE COMODINES INTERACTIVOS -->
                     <div class="wildcards-section">
-                        <div class="wildcards-title">⚙️ Sistema de Asistencia y Andamiaje Cognitivo</div>
                         <div class="wildcards-grid">
-                            <button class="btn-wildcard" id="btn5050" onclick="ejecutarComodina5050()">🌓 Comodín 50/50</button>
-                            <button class="btn-wildcard" id="btnDiscard" onclick="ejecutarComodinarDescartar()">🗑️ Descartar Opción</button>
-                            <button class="btn-wildcard" id="btnTutor" onclick="ejecutarComodinarTutor()">💡 Sugerencia del Tutor</button>
-                            <button class="btn-wildcard" id="btnStats" onclick="ejecutarComodinarEstadistica()">📊 Muestra Estadística</button>
+                            <button class="btn-wildcard" id="btn5050" onclick="ejecutarComodina5050()">Eliminar 2 opciones (50/50)</button>
+                            <button class="btn-wildcard" id="btnTutor" onclick="ejecutarComodinarTutor()">Pedir pista al Tutor</button>
                         </div>
                         <div id="wildcardOutput" class="wildcard-panel hidden"></div>
                     </div>
-
-                    <!-- CONTENEDOR DE OPCIONES DE RESPUESTA -->
                     <div class="options-container" id="optionsContainer"></div>
-
-                    <!-- PANEL DE RETROALIMENTACIÓN TÉCNICA -->
                     <div class="feedback-panel hidden" id="feedbackPanel">
-                        <div class="feedback-title">✍️ Justificación Técnica y Rigor Científico</div>
+                        <div class="feedback-title">Justificación Técnica Científica</div>
                         <p class="feedback-content" id="feedbackText"></p>
                     </div>
                 </div>
             </div>
         </section>
     </main>
-
     <script src="index.js"></script>
 </body>
 </html>
