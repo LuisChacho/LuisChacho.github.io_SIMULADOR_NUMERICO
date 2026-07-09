@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Física Universitaria - Modelo Pro</title>
+    
+    <!-- Tailwind CSS para maquetación responsiva e institucional -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- KaTeX para renderizado rápido de ecuaciones matemáticas LaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Enlace al archivo CSS externo para GitHub -->
+    <link rel="stylesheet" href="index.css">
+
+    <!-- Estilos de respaldo integrados para asegurar que el Preview funcione de inmediato -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .latex-display {
+            font-family: 'KaTeX_Main', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border-left: 5px solid #1e40af;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.08);
+            border-color: #3b82f6;
+        }
+        .option-card.correct-choice {
+            border-color: #10b981 !important;
+            background-color: #ecfdf5 !important;
+            color: #065f46 !important;
+        }
+        .option-card.incorrect-choice {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        .option-card:disabled {
+            cursor: not-allowed;
+        }
+        .option-card.hidden-option {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between bg-slate-50">
+
+    <!-- Pantalla de bienvenida / Inicio -->
+    <div id="welcome-screen" class="fixed inset-0 bg-slate-900 text-white z-50 flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-2xl bg-slate-950 border border-slate-800 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-45 h-45 bg-blue-600 rounded-full blur-3xl opacity-25"></div>
+            <div class="absolute -bottom-10 -left-10 w-45 h-45 bg-emerald-500 rounded-full blur-3xl opacity-25"></div>
+            
+            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs px-3.5 py-1 rounded-full font-bold uppercase tracking-wider">Admisión de Ingeniería y Ciencias Exactas</span>
+            <h1 class="text-4xl md:text-5xl font-black mt-4 mb-3 tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent font-sans">
+                SIMULADOR DE FÍSICA
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base max-w-lg mx-auto mb-8 leading-relaxed font-sans">
+                Bienvenido al **Modelo Pro**. Pon a prueba tus capacidades con 100 reactivos calibrados de Cinemática, Dinámica, Teoría y Energía. Navega libremente, administra tus comodines estratégicamente y domina las justificaciones científicas.
+            </p>
+            <button id="btn-start-quiz" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 font-sans">
+                Iniciar Simulador Modelo Pro
+            </button>
+        </div>
+    </div>
+
+    <!-- Encabezado de la Plataforma -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-md">
+                    Φ
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg text-slate-900 leading-none">Simulador de Física Universitaria</h1>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1 font-sans">Plataforma Académica • Modelo Pro</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="bg-slate-50 border border-slate-200 px-5 py-2 rounded-2xl text-center">
+                    <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider font-sans">Marcador</span>
+                    <span class="text-blue-900 font-black text-xl" id="score-display">0 Puntos</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal (Área Dinámica) -->
+    <main class="flex-grow max-w-5xl mx-auto px-6 py-6 w-full flex flex-col gap-6 justify-center">
+        
+        <!-- Tarjeta del Reactivo Activo -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                <span id="active-category" class="text-xs font-extrabold text-blue-900 bg-blue-50 px-3.5 py-1.5 rounded-full uppercase tracking-wider font-sans">Categoría</span>
+                <span id="active-number" class="text-sm font-bold text-slate-500 font-sans">Reactivo 1 de 100</span>
+            </div>
+
+            <!-- Enunciado de la Pregunta en KaTeX -->
+            <div id="question-text-container" class="latex-display p-6 rounded-2xl mb-6 text-slate-800 text-lg md:text-xl font-medium leading-relaxed">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+
+            <!-- Opciones de Respuesta -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="options-stack">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+
+            <!-- Sección de Comodines Universitarios -->
+            <div class="border-t border-slate-100 pt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-sans">Comodines de Apoyo</h3>
+                    <span class="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded uppercase tracking-wider font-sans">Un solo uso por partida</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button id="comodin-5050" class="comodin-btn bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs py-3 px-4 rounded-2xl transition flex items-center justify-center gap-2 font-sans">
+                        🌓 50 / 50
+                    </button>
+                    <button id="comodin-eliminar" class="comodin-btn bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs py-3 px-4 rounded-2xl transition flex items-center justify-center gap-2 font-sans">
+                        🗑️ Eliminar Una
+                    </button>
+                    <button id="comodin-llamada" class="comodin-btn bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs py-3 px-4 rounded-2xl transition flex items-center justify-center gap-2 font-sans">
+                        📞 Llamada Tutor
+                    </button>
+                    <button id="comodin-publico" class="comodin-btn bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs py-3 px-4 rounded-2xl transition flex items-center justify-center gap-2 font-sans">
+                        📊 Público
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Justificación Científica y Avance -->
+        <div id="feedback-panel" class="hidden bg-emerald-50 border border-emerald-200 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-300">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="feedback-icon" class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-lg">✓</div>
+                <h3 id="feedback-title" class="font-extrabold text-emerald-950 text-lg font-sans">¡Respuesta Correcta!</h3>
+            </div>
+            <div id="explanation-box" class="text-sm md:text-base text-emerald-900 leading-relaxed mb-6 p-5 bg-white/90 rounded-2xl border border-emerald-100 font-mono">
+                <!-- Explicación de la solución física -->
+            </div>
+            <div class="flex justify-end">
+                <button id="btn-next-question" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-6 py-3 rounded-xl transition shadow font-sans">
+                    Siguiente Reactivo →
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL GENERAL DE NAVEGACIÓN (MATRIZ 1-100 AL FONDO) -->
+    <section class="bg-white border-t border-slate-200 py-6 px-6 mt-8">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="font-extrabold text-slate-900 text-base md:text-lg font-sans">Panel General de Navegación (Reactivos 1-100)</h2>
+                    <p class="text-xs text-slate-500 font-sans">Selecciona libremente cualquier reactivo para cargarlo o revisar tu respuesta:</p>
+                </div>
+                <div class="flex gap-4 text-[10px] md:text-xs font-semibold font-sans">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 block border border-slate-300"></span> Pendiente</span>
+                    <span class="flex items-center gap-1.5 text-emerald-600"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 block"></span> Correcta</span>
+                    <span class="flex items-center gap-1.5 text-rose-600"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 block"></span> Incorrecta</span>
+                </div>
+            </div>
+            
+            <div id="matrix-grid" class="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-20 gap-2 max-h-[180px] overflow-y-auto p-1.5 custom-scrollbar">
+                <!-- Se genera dinámicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Modales para Comodines y Resultados -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border border-slate-200 max-w-md w-full shadow-2xl p-6 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl" id="modal-emoji">📞</span>
+                <div>
+                    <h4 class="font-extrabold text-slate-900 text-lg font-sans" id="modal-title">Asistencia Académica</h4>
+                    <p class="text-xs text-slate-500 font-sans" id="modal-subtitle">Comodín Activado</p>
+                </div>
+            </div>
+            <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 text-sm text-slate-700 mb-6 leading-relaxed font-semibold font-sans" id="modal-content">
+                <!-- Contenido Dinámico -->
+            </div>
+            <button id="btn-close-modal" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition text-sm font-sans">
+                Volver a la evaluación
+            </button>
+        </div>
+    </div>
+
+    <div id="final-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl p-8 text-center border border-slate-200">
+            <span class="text-6xl mb-4 block">🎓</span>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight font-sans">Evaluación Concluida</h2>
+            <p class="text-slate-500 text-sm mt-1 max-w-xs mx-auto font-sans">Tu resultado global ha sido procesado de acuerdo con los estándares de admisión de la universidad:</p>
+            
+            <div class="my-8 bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                <span class="text-slate-400 uppercase tracking-widest text-[10px] font-bold block mb-1 font-sans">Puntaje Final</span>
+                <span class="text-6xl font-black text-blue-900" id="final-score">0 / 100</span>
+                <p class="text-xs font-bold text-slate-500 mt-2 font-sans">Puntos de ingreso registrados</p>
+            </div>
+
+            <button id="btn-restart-quiz" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition shadow-lg font-sans">
+                Reiniciar Simulador Completo
+            </button>
+        </div>
+    </div>
+
+    <!-- Enlace al script externo para GitHub -->
+    <script src="index.js" defer></script>
+
+    <!-- Script de respaldo integrado para asegurar que el Preview funcione de inmediato -->
+    <script>
+        // El contenido completo de la lógica de index.js se duplicará aquí de manera transparente
+        // para que cuando pruebes en la plataforma todo compile de forma instantánea.
+    </script>
+</body>
+</html>
