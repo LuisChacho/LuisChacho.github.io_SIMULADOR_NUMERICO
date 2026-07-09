@@ -1,699 +1,459 @@
 /**
- * SIMULADOR DE FÍSICA UNIVERSITARIA - MODELO PRO (CORREGIDO)
- * JS de control y generación sistemática de 150 reactivos únicos.
- * Incluye cinemática vectorial con coordenadas i,j, leyes de Newton,
- * Trabajo, Potencia y Energía y Teorías conceptuales.
- * Event Listeners bindeados de manera segura al cargar el DOM.
+ * SISTEMA DE EVALUACIÓN MULTICATEGORÍA - MOTOR DE GENERACIÓN PROCEDURAL
+ * Diseñado con arquitectura limpia, inmutabilidad de estado y algoritmos robustos.
  */
 
-const GRAVITY = 9.8;
-let questions = [];
-let userAnswers = {}; // { questionIndex: { chosen, isCorrect } }
-let activeIndex = 0;
-let usedComodines = { "5050": false, "eliminar": false, "llamada": false, "publico": false };
+const CATEGORIAS_EXAMEN = [
+    "SIMPLIFICACION O REDUCCIOND E EXPRESIONES",
+    "PLANATEAMIENTO DE ECUACIONES",
+    "CALCULO DE EDADES",
+    "REGLA DE 3 COMPUESTA",
+    "PORCENTAJES",
+    "MEDIA ARITMETICA",
+    "RAZONES Y PROPORCIONES",
+    "PERMUTACIONES Y VARIACIONES",
+    "PROPORCIONALIDAD"
+];
+
+// Banco base de reactivos semilla analizados pedagógicamente
+const reactivosSemilla = [
+    {
+        cat: "SIMPLIFICACION O REDUCCIOND E EXPRESIONES",
+        preg: "Reduzca a su mínima expresión algebraica el siguiente sistema fraccionario continuo bajo condiciones de frontera válidas: $W = \\frac{x^2 - 9}{x^2 - 5x + 6} \\cdot \\frac{x - 2}{x + 3}$.",
+        corr: "1",
+        inc: ["x - 3", "\\frac{x + 3}{x - 2}", "0"],
+        just: "Factorizando por diferencia de cuadrados y trinomio de la forma x^2+bx+c: (x-3)(x+3)/[(x-3)(x-2)] * (x-2)/(x+3). Al simplificar los términos idénticos en el numerador y denominador, todos los factores se anulan recíprocamente, resultando exactamente la unidad (1).",
+        pist: "Proceda a factorizar el numerador del primer término como una diferencia de cuadrados perfectos y su denominador como un binomio soluble."
+    },
+    {
+        cat: "PLANATEAMIENTO DE ECUACIONES",
+        preg: "Un sistema cinemático compuesto por tres partículas acumula una energía total distribuida de tal forma que la segunda recibe el doble de la primera, y la tercera el triple de la segunda. Si el consolidado energético es de 180 Joules, ¿cuál es la energía de la primera partícula?",
+        corr: "20 J",
+        inc: ["40 J", "30 J", "60 J"],
+        just: "Planteamiento algebraico: P1 = x, P2 = 2x, P3 = 3(2x) = 6x. La ecuación resultante es: x + 2x + 6x = 180 -> 9x = 180 -> x = 20 Joules. Por tanto, la primera partícula registra de manera exacta 20 J.",
+        pist: "Defina la variable unificada en función de la primera partícula y multiplique consecutivamente los coeficientes relativos."
+    },
+    {
+        cat: "CALCULO DE EDADES",
+        preg: "La edad de un acelerador de partículas lineal alfa triplica la edad operativa de un módulo beta. Si hace 5 años la suma absoluta de sus tiempos de servicio equivalía a 30 años, ¿cuál es la edad operativa actual del acelerador alfa?",
+        corr: "30 años",
+        inc: ["10 años", "24 años", "40 años"],
+        just: "Ecuación temporal: Alfa = 3x, Beta = x. Hace 5 años: (3x - 5) + (x - 5) = 30 -> 4x - 10 = 30 -> 4x = 40 -> x = 10. Por consiguiente, el módulo Alfa posee actualmente 3 * 10 = 30 años.",
+        pist: "No olvide restar el desplazamiento de 5 años del pasado a ambas entidades al formular la igualdad fundamental."
+    },
+    {
+        cat: "REGLA DE 3 COMPUESTA",
+        preg: "Si 6 reactores de fusión idénticos consumen 12 kg de deuterio operando a régimen constante durante 4 horas, ¿cuántos kilogramos de combustible consumirán 9 reactores análogos durante un lapso extendido de 8 horas?",
+        corr: "36 kg",
+        inc: ["24 kg", "18 kg", "48 kg"],
+        just: "Análisis proporcional: (Reactores * Horas) / Combustible = Constante. Operando: (6 * 4) / 12 = (9 * 8) / X -> 24 / 12 = 72 / X -> 2 = 72 / X -> X = 36 kg.",
+        pist: "Establezca la proporcionalidad directa respecto a reactores y horas, e inversa respecto al insumo masa consumido."
+    },
+    {
+        cat: "PORCENTAJES",
+        preg: "Un haz luminoso experimenta un proceso de atenuación óptica secuencial: primero pierde el 20% de su intensidad al cruzar un cristal refractivo, y posteriormente se reduce un 10% adicional sobre el remanente en un filtro polarizado. ¿Cuál es el porcentaje total de intensidad retenida al final?",
+        corr: "72%",
+        inc: ["70%", "68%", "75%"],
+        just: "Cálculo en cadena acumulativa: Intensidad inicial = 100%. Tras primer filtro: 100% * 0.80 = 80%. Tras segundo filtro: 80% * 0.90 = 72%. La eficiencia neta conservada es del 72%.",
+        pist: "Recuerde que los descuentos de atenuación sucesivos se multiplican como factores de retención correlativos, no de manera acumulativa aritmética."
+    },
+    {
+        cat: "MEDIA ARITMETICA",
+        preg: "Se registran las velocidades de muestreo de 5 sensores cuánticos obteniendo una media exacta de 12 ms. Si se añade un sexto sensor de calibración, el promedio general se desplaza de forma ascendente a 14 ms. ¿Qué velocidad de respuesta registró el nuevo componente?",
+        corr: "24 ms",
+        inc: ["20 ms", "16 ms", "22 ms"],
+        just: "Sumatoria inicial total = 5 * 12 = 60 ms. Sumatoria final expandida con el nuevo nodo = 6 * 14 = 84 ms. El aporte escalar neto del sexto componente equivale a: 84 - 60 = 24 ms.",
+        pist: "Compare las magnitudes sumatorias absolutas de los conjuntos estables antes y después de la inserción del nuevo dato."
+    },
+    {
+        cat: "RAZONES Y PROPORCIONES",
+        preg: "La masa de dos muestras físicas inestables se halla en una relación geométrica de 4 a 7. Si la diferencia de masa entre ambas estructuras críticas es de 15 gramos, determine el gramaje absoluto de la muestra más pesada.",
+        corr: "35 g",
+        inc: ["20 g", "28 g", "49 g"],
+        just: "Proporción escalar: M1 = 4k, M2 = 7k. Condición diferencial: 7k - 4k = 15 -> 3k = 15 -> k = 5. La constante operativa es 5. Por lo tanto, la muestra mayor mide: 7 * 5 = 35 gramos.",
+        pist: "Determine el valor unificado de la constante de proporcionalidad 'k' partiendo del diferencial aritmético provisto."
+    },
+    {
+        cat: "PERMUTACIONES Y VARIACIONES",
+        preg: "Un algoritmo criptográfico requiere estructurar claves de acceso exclusivas utilizando exactamente 3 letras distintas elegidas del conjunto de control ordenado {A, B, C, D, E}. ¿Cuántas cadenas de comandos secuenciales se pueden constituir?",
+        corr: "60",
+        inc: ["10", "120", "20"],
+        just: "Puesto que el orden jerárquico es determinante en un entorno criptográfico, aplicamos variaciones ordinarias de 5 elementos tomados en subgrupos de 3: V(5,3) = 5 * 4 * 3 = 60 combinaciones lineales.",
+        pist: "Evalúe si cambiar el orden de las letras seleccionadas genera o no un código de acceso diferente."
+    },
+    {
+        cat: "PROPORCIONALIDAD",
+        preg: "La resistencia eléctrica de un conductor de pruebas varía de forma inversamente proporcional al área de su sección transversal circular. Si un conductor con un área de 2 mm² presenta una resistencia óhmica de 12 ohmios, ¿cuál será el valor de la resistencia si el área se expande a 6 mm²?",
+        corr: "4 ohmios",
+        inc: ["36 ohmios", "6 ohmios", "8 ohmios"],
+        just: "Bajo proporcionalidad inversa, el producto escalar se mantiene invariante: A1 * R1 = A2 * R2. Sustituyendo los valores del experimento: 2 * 12 = 6 * R2 -> 24 = 6 * R2 -> R2 = 4 ohmios.",
+        pist: "A mayor sección transversal disponible, los portadores de carga encuentran menor oposición física, disminuyendo la resistencia."
+    }
+];
+
+// Estado de la Aplicación Global (Inmutable externamente)
+const bancoPreguntas = [];
+const progresoExamen = {};
+const trackingComodines = {};
+let idPreguntaActiva = null;
 
 /**
- * Genera el banco de 150 reactivos estructurados sin repetición de datos ni variables.
+ * MOTOR DE GENERACIÓN ALGORÍTMICA DE REACTIVOS
+ * Completa la matriz hasta 100 ítems sin duplicación mediante funciones pseudo-aleatorias deterministas.
  */
-function generateQuestionBank() {
-    questions = [];
-    const categories = [
-        "Cinemática - MRU (Vectorial & Escalar)",
-        "Cinemática - MRUV Vectorial",
-        "Cinemática - Caída Libre",
-        "Cinemática - Movimiento Vertical",
-        "Cinemática - Movimiento Compuesto",
-        "Cinemática - MCU",
-        "Dinámica - Leyes de Newton",
-        "Dinámica - Fuerzas y Planos",
-        "Trabajo, Potencia y Energía",
-        "Teoría General de la Física"
-    ];
-
-    for (let i = 1; i <= 150; i++) {
-        let cat = categories[(i - 1) % categories.length];
-        let q = {
-            id: i,
-            categoria: cat,
-            pregunta: "",
-            opciones: {},
-            correcta: "",
-            explicacion: ""
-        };
-
-        // Coeficientes variables únicos dependientes del ID para evitar clonación de parámetros
-        let val1 = ((i * 3) % 15) + 6; 
-        let val2 = ((i * 2) % 8) + 3; 
-        let m = ((i * 4) % 20) + 8;   
-
-        switch (cat) {
-            case "Cinemática - MRU (Vectorial & Escalar)":
-                if (i % 2 === 0) {
-                    let rx = val1 * 5;
-                    let ry = -val2 * 10;
-                    let t = 5;
-                    let vx = rx / t;
-                    let vy = ry / t;
-                    q.pregunta = `Un móvil se desplaza con movimiento rectilíneo uniforme desde el origen hasta el punto final \\( \\vec{r} = (${rx}\\hat{i} ${ry >= 0 ? "+" : ""}${ry}\\hat{j}) \\text{ km} \\) en un tiempo de \\( t = ${t} \\text{ h} \\). Determine el vector velocidad media de la partícula.`;
-                    q.opciones = {
-                        A: `\\( \\vec{v} = (${vx.toFixed(2)}\\hat{i} ${vy >= 0 ? "+" : ""}${vy.toFixed(2)}\\hat{j}) \\text{ km/h} \\)`,
-                        B: `\\( \\vec{v} = (${(vx + 4.1).toFixed(2)}\\hat{i} ${(vy - 3.2) >= 0 ? "+" : ""}${(vy - 3.2).toFixed(2)}\\hat{j}) \\text{ km/h} \\)`,
-                        C: `\\( \\vec{v} = (${(vx * 2.5).toFixed(2)}\\hat{i} ${(vy * 2.5) >= 0 ? "+" : ""}${(vy * 2.5).toFixed(2)}\\hat{j}) \\text{ km/h} \\)`,
-                        D: `\\( \\vec{v} = (${rx}\\hat{i} ${ry >= 0 ? "+" : ""}${ry}\\hat{j}) \\text{ km/h} \\)`
-                    };
-                } else {
-                    let d = val1 * 10;
-                    let v = val2;
-                    let t = (d / v).toFixed(2);
-                    q.pregunta = `Un vehículo de pruebas universitarias avanza a lo largo de un riel horizontal con velocidad constante de \\( v = ${v} \\text{ m/s} \\). ¿Qué intervalo de tiempo requiere para recorrer \\( d = ${d} \\text{ m} \\)?`;
-                    q.opciones = {
-                        A: `\\( t = ${t} \\text{ s} \\)`,
-                        B: `\\( t = ${(parseFloat(t) + 4.2).toFixed(2)} \\text{ s} \\)`,
-                        C: `\\( t = ${(parseFloat(t) * 0.6).toFixed(2)} \\text{ s} \\)`,
-                        D: `\\( t = ${(d * v).toFixed(2)} \\text{ s} \\)`
-                    };
-                }
-                q.correcta = "A";
-                q.explicacion = "En el MRU, la velocidad es constante. El desplazamiento o el tiempo se calculan mediante su relación de proporcionalidad directa lineal simple.";
-                break;
-
-            case "Cinemática - MRUV Vectorial":
-                let v0x = val1;
-                let ay = val2;
-                let t_mruv = 4;
-                let x_f = v0x * t_mruv;
-                let y_f = 0.5 * ay * t_mruv * t_mruv;
-                q.pregunta = `Un electrón ingresa a un deflector con velocidad inicial \\( \\vec{v}_0 = ${v0x}\\hat{i} \\text{ m/s} \\) y experimenta una aceleración electrostática uniforme de \\( \\vec{a} = ${ay}\\hat{j} \\text{ m/s}^2 \\). Calcule su vector de posición final \\( \\vec{r} \\) a los \\( t = ${t_mruv} \\text{ s} \\).`;
-                q.opciones = {
-                    A: `\\( \\vec{r} = (${x_f.toFixed(2)}\\hat{i} + ${y_f.toFixed(2)}\\hat{j}) \\text{ m} \\)`,
-                    B: `\\( \\vec{r} = (${(x_f * 1.5).toFixed(2)}\\hat{i} + ${y_f.toFixed(2)}\\hat{j}) \\text{ m} \\)`,
-                    C: `\\( \\vec{r} = (${x_f.toFixed(2)}\\hat{i} + ${(y_f * 2.2).toFixed(2)}\\hat{j}) \\text{ m} \\)`,
-                    D: `\\( \\vec{r} = (0\\hat{i} + 0\\hat{j}) \\text{ m} \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "Se aplican por separado las ecuaciones cinemáticas de posición final: \\( x = v_0 t \\) en la componente horizontal e \\( y = \\frac{1}{2}at^2 \\) en la acelerada.";
-                break;
-
-            case "Cinemática - Caída Libre":
-                let h_cl = (0.5 * GRAVITY * val1 * val1).toFixed(2);
-                q.pregunta = `Se suelta una esfera metálica desde el reposo absoluto desde la terraza de un laboratorio de física. Si tarda exactamente \\( t = ${val1} \\text{ s} \\) en chocar contra el suelo, determine la altura del edificio. Considere \\( g = ${GRAVITY} \\text{ m/s}^2 \\).`;
-                q.opciones = {
-                    A: `\\( h = ${h_cl} \\text{ m} \\)`,
-                    B: `\\( h = ${(h_cl * 0.5).toFixed(2)} \\text{ m} \\)`,
-                    C: `\\( h = ${(GRAVITY * val1).toFixed(2)} \\text{ m} \\)`,
-                    D: `\\( h = ${(h_cl * 1.35).toFixed(2)} \\text{ m} \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "Dado que el objeto se suelta desde el reposo absoluto, su altura se evalúa como: \\( h = \\frac{1}{2}g t^2 \\). Reemplazando los parámetros numéricos se obtiene el resultado.";
-                break;
-
-            case "Cinemática - Movimiento Vertical":
-                let v0_mv = (GRAVITY * val2).toFixed(1);
-                let h_max = (0.5 * v0_mv * v0_mv / GRAVITY).toFixed(2);
-                q.pregunta = `Un proyectil de calibración es disparado verticalmente hacia arriba desde el suelo con rapidez de \\( v_0 = ${v0_mv} \\text{ m/s} \\). Calcule la altura máxima alcanzada sobre el punto de partida. Considere \\( g = ${GRAVITY} \\text{ m/s}^2 \\).`;
-                q.opciones = {
-                    A: `\\( H_{max} = ${h_max} \\text{ m} \\)`,
-                    B: `\\( H_{max} = ${(h_max * 1.5).toFixed(2)} \\text{ m} \\)`,
-                    C: `\\( H_{max} = ${(h_max * 0.5).toFixed(2)} \\text{ m} \\)`,
-                    D: `\\( H_{max} = ${(v0_mv * 2).toFixed(2)} \\text{ m} \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "Al alcanzar la altura máxima, la velocidad instantánea del objeto se reduce a cero. Por ende: \\( H_{max} = \\frac{v_0^2}{2g} \\).";
-                break;
-
-            case "Cinemática - Movimiento Compuesto":
-                let v0_p = val1 + 10;
-                let alc_p = ((v0_p * v0_p * Math.sin(2 * 45 * Math.PI / 180)) / GRAVITY).toFixed(2);
-                q.pregunta = `Un proyectil es lanzado con una velocidad inicial de \\( v_0 = ${v0_p} \\text{ m/s} \\) y un ángulo de inclinación de \\( \\theta = 45^\\circ \\). Determine el alcance horizontal de la trayectoria parabólica. Considere \\( g = ${GRAVITY} \\text{ m/s}^2 \\).`;
-                q.opciones = {
-                    A: `\\( R = ${alc_p} \\text{ m} \\)`,
-                    B: `\\( R = ${(alc_p * 1.25).toFixed(2)} \\text{ m} \\)`,
-                    C: `\\( R = ${(alc_p * 0.5).toFixed(2)} \\text{ m} \\)`,
-                    D: `\\( R = ${(v0_p * 2).toFixed(2)} \\text{ m} \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "El alcance horizontal máximo en tiro parabólico se obtiene mediante la ecuación simplificada: \\( R = \\frac{v_0^2 \\cdot \\sin(2\\theta)}{g} \\).";
-                break;
-
-            case "Cinemática - MCU":
-                let radio_mcu = val2;
-                let periodo_mcu = val1 / 2;
-                let vt = ((2 * Math.PI * radio_mcu) / periodo_mcu).toFixed(2);
-                q.pregunta = `Un volante de motor de inercia gira con movimiento circular uniforme con un radio de \\( R = ${radio_mcu} \\text{ m} \\). Si tarda un periodo de \\( T = ${periodo_mcu} \\text{ s} \\) por cada vuelta, calcule la velocidad tangencial lineal de los puntos periféricos.`;
-                q.opciones = {
-                    A: `\\( v = ${vt} \\text{ m/s} \\)`,
-                    B: `\\( v = ${(vt * 1.5).toFixed(2)} \\text{ m/s} \\)`,
-                    C: `\\( v = ${(vt * 0.5).toFixed(2)} \\text{ m/s} \\)`,
-                    D: `\\( v = ${(radio_mcu / periodo_mcu).toFixed(2)} \\text{ m/s} \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "La rapidez tangencial lineal se define por el perímetro recorrido en un periodo orbital completo: \\( v = \\frac{2\\pi R}{T} \\).";
-                break;
-
-            case "Dinámica - Leyes de Newton":
-                let f_newton = val1 * 10;
-                let a_newton = (f_newton / m).toFixed(2);
-                q.pregunta = `Un bloque de metal con masa de \\( m = ${m} \\text{ kg} \\) se encuentra en reposo absoluto sobre una rampa lisa horizontal sin fricción. Si se le imprime una fuerza constante de \\( F = ${f_newton} \\text{ N} \\), ¿qué aceleración lineal adquirirá?`;
-                q.opciones = {
-                    A: `\\( a = ${a_newton} \\text{ m/s}^2 \\)`,
-                    B: `\\( a = ${(a_newton * 1.4).toFixed(2)} \\text{ m/s}^2 \\)`,
-                    C: `\\( a = ${(a_newton * 0.6).toFixed(2)} \\text{ m/s}^2 \\)`,
-                    D: `\\( a = ${(f_newton * m).toFixed(2)} \\text{ m/s}^2 \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "Basándonos en la Segunda Ley de Newton, la aceleración se despeja de la fuerza neta y masa: \\( a = \\frac{F}{m} \\).";
-                break;
-
-            case "Dinámica - Fuerzas y Planos":
-                let normal = (m * GRAVITY * Math.cos(30 * Math.PI / 180)).toFixed(2);
-                q.pregunta = `Un bloque pesado de masa \\( m = ${m} \\text{ kg} \\) reposa sobre un plano inclinado pulido libre de fricción que forma un ángulo de \\( \\theta = 30^\\circ \\) respecto al plano horizontal. Determine la magnitud de la fuerza normal ejercida por la superficie sobre el bloque. Considere \\( g = ${GRAVITY} \\text{ m/s}^2 \\).`;
-                q.opciones = {
-                    A: `\\( N = ${normal} \\text{ N} \\)`,
-                    B: `\\( N = ${(m * GRAVITY).toFixed(2)} \\text{ N} \\)`,
-                    C: `\\( N = ${(m * GRAVITY * 0.5).toFixed(2)} \\text{ N} \\)`,
-                    D: `\\( N = ${(normal * 1.5).toFixed(2)} \\text{ N} \\)`
-                };
-                q.correcta = "A";
-                q.explicacion = "La fuerza normal en un plano inclinado equilibra la componente del peso perpendicular a la rampa: \\( N = m \\cdot g \\cdot \\cos(\\theta) \\).";
-                break;
-
-            case "Trabajo, Potencia y Energía":
-                let indexSub = i % 5;
-                if (indexSub === 0) {
-                    let f_t = val1 * 10;
-                    let d_t = val2;
-                    let w_t = f_t * d_t;
-                    q.pregunta = `Un bloque es empujado sobre un piso horizontal libre de rozamiento por una fuerza constante de \\( F = ${f_t} \\text{ N} \\). Si se desplaza una distancia lineal de \\( d = ${d_t} \\text{ m} \\) de manera colineal, calcule el trabajo mecánico realizado.`;
-                    q.opciones = {
-                        A: `\\( W = ${w_t.toFixed(2)} \\text{ J} \\)`,
-                        B: `\\( W = ${(w_t * 1.35).toFixed(2)} \\text{ J} \\)`,
-                        C: `\\( W = ${(w_t * 0.5).toFixed(2)} \\text{ J} \\)`,
-                        D: `\\( W = 0 \\text{ J} \\)`
-                    };
-                    q.explicacion = "El trabajo mecánico realizado por una fuerza paralela al desplazamiento se define por el producto directo de la fuerza y la distancia de arrastre: \\( W = F \\cdot d \\).";
-                } else if (indexSub === 1) {
-                    let mass_ec = m;
-                    let speed_ec = val1;
-                    let ec_val = 0.5 * mass_ec * speed_ec * speed_ec;
-                    q.pregunta = `Determine la energía cinética que posee un cuerpo de masa \\( m = ${mass_ec} \\text{ kg} \\) en el instante que su rapidez lineal alcanza los \\( v = ${speed_ec} \\text{ m/s} \\).`;
-                    q.opciones = {
-                        A: `\\( E_c = ${ec_val.toFixed(2)} \\text{ J} \\)`,
-                        B: `\\( E_c = ${(ec_val * 1.5).toFixed(2)} \\text{ J} \\)`,
-                        C: `\\( E_c = ${(ec_val * 0.4).toFixed(2)} \\text{ J} \\)`,
-                        D: `\\( E_c = ${(mass_ec * speed_ec).toFixed(2)} \\text{ J} \\)`
-                    };
-                    q.explicacion = "La energía cinética, dependiente del movimiento lineal de los cuerpos, se evalúa mediante la expresión matemática escalar: \\( E_c = \\frac{1}{2}m v^2 \\).";
-                } else if (indexSub === 2) {
-                    let mass_ep = m;
-                    let height_ep = val2;
-                    let ep_val = mass_ep * GRAVITY * height_ep;
-                    q.pregunta = `Un objeto de masa \\( m = ${mass_ep} \\text{ kg} \\) se encuentra suspendido estáticamente a una altura de \\( h = ${height_ep} \\text{ m} \\) sobre el suelo. Calcule su energía potencial gravitatoria acumulada. Considere \\( g = ${GRAVITY} \\text{ m/s}^2 \\).`;
-                    q.opciones = {
-                        A: `\\( E_p = ${ep_val.toFixed(2)} \\text{ J} \\)`,
-                        B: `\\( E_p = ${(ep_val * 1.45).toFixed(2)} \\text{ J} \\)`,
-                        C: `\\( E_p = ${(ep_val * 0.5).toFixed(2)} \\text{ J} \\)`,
-                        D: `\\( E_p = ${(mass_ep * height_ep).toFixed(2)} \\text{ J} \\)`
-                    };
-                    q.explicacion = "La energía potencial gravitatoria se calcula directamente como el producto de la masa, la aceleración gravitatoria y la altura relativa: \\( E_p = m \\cdot g \\cdot h \\).";
-                } else if (indexSub === 3) {
-                    let work_p = val1 * 200;
-                    let time_p = val2;
-                    let power_val = work_p / time_p;
-                    q.pregunta = `Una grúa de carga realiza un trabajo mecánico de \\( W = ${work_p} \\text{ J} \\) para elevar un bloque de hormigón en un lapso de tiempo exacto de \\( t = ${time_p} \\text{ s} \\). Calcule la potencia mecánica desarrollada por el motor.`;
-                    q.opciones = {
-                        A: `\\( P = ${power_val.toFixed(2)} \\text{ W} \\)`,
-                        B: `\\( P = ${(power_val * 1.5).toFixed(2)} \\text{ W} \\)`,
-                        C: `\\( P = ${(power_val * 0.6).toFixed(2)} \\text{ W} \\)`,
-                        D: `\\( P = ${(work_p * time_p).toFixed(2)} \\text{ W} \\)`
-                    };
-                    q.explicacion = "La potencia mecánica representa la rapidez o tasa temporal con la que se transfiere o realiza trabajo útil: \\( P = \\frac{W}{t} \\).";
-                } else {
-                    let h_cons = val1 + 5;
-                    let speed_cons = Math.sqrt(2 * GRAVITY * h_cons);
-                    q.pregunta = `Se deja caer una esfera metálica desde una plataforma a una altura de \\( h = ${h_cons} \\text{ m} \\). Utilizando la conservación de la energía mecánica, determine su velocidad de impacto en el suelo. Considere \\( g = ${GRAVITY} \\text{ m/s}^2 \\).`;
-                    q.opciones = {
-                        A: `\\( v = ${speed_cons.toFixed(2)} \\text{ m/s} \\)`,
-                        B: `\\( v = ${(speed_cons * 1.5).toFixed(2)} \\text{ m/s} \\)`,
-                        C: `\\( v = ${(speed_cons * 0.5).toFixed(2)} \\text{ m/s} \\)`,
-                        D: `\\( v = ${(2 * GRAVITY * h_cons).toFixed(2)} \\text{ m/s} \\)`
-                    };
-                    q.explicacion = "Por conservación de la energía, la energía potencial gravitatoria inicial se transforma íntegramente en cinética: \\( mgh = \\frac{1}{2}mv^2 \\implies v = \\sqrt{2gh} \\).";
-                }
-                q.correcta = "A";
-                break;
-
-            case "Teoría General de la Física":
-                let theorySub = i % 5;
-                if (theorySub === 0) {
-                    q.pregunta = "¿Cuál de las siguientes magnitudes físicas se clasifica rigurosamente como una magnitud escalar en la física general?";
-                    q.opciones = {
-                        A: "La energía mecánica",
-                        B: "La fuerza de empuje",
-                        C: "La velocidad instantánea",
-                        D: "La aceleración centrípeta"
-                    };
-                    q.explicacion = "La energía es una cantidad escalar ya que se define completamente por su magnitud numérica y unidad física, sin requerir una dirección ni sentido en el espacio.";
-                } else if (theorySub === 1) {
-                    q.pregunta = "De acuerdo con la Primera Ley de Newton (Inercia), si la fuerza neta que actúa sobre una partícula es exactamente nula, ¿qué se puede afirmar sobre su estado?";
-                    q.opciones = {
-                        A: "Permanecerá en reposo o continuará en movimiento con velocidad constante.",
-                        B: "Se detendrá inmediatamente debido a la ausencia de fuerzas impulsoras.",
-                        C: "Experimentará una aceleración centrípeta de magnitud constante.",
-                        D: "Aumentará su energía potencial gravitatoria de forma exponencial."
-                    };
-                    q.explicacion = "La inercia postula que un cuerpo libre de fuerzas netas externas mantiene su estado de movimiento rectilíneo uniforme (MRU) o reposo absoluto.";
-                } else if (theorySub === 2) {
-                    q.pregunta = "En un Movimiento Circular Uniforme (MCU), ¿cuál es el comportamiento físico de la aceleración centrípeta de la partícula?";
-                    q.opciones = {
-                        A: "Su magnitud es constante, pero su dirección cambia continuamente apuntando al centro.",
-                        B: "Tanto su magnitud como su dirección angular son completamente constantes.",
-                        C: "Su magnitud cambia linealmente en el tiempo, pero su dirección es fija.",
-                        D: "Es nula, ya que la rapidez lineal de la partícula no sufre variaciones."
-                    };
-                    q.explicacion = "La aceleración centrípeta actúa alterando únicamente la dirección del vector de velocidad, apuntando siempre de forma ortogonal hacia el centro orbital.";
-                } else if (theorySub === 3) {
-                    q.pregunta = "Según la Tercera Ley de Newton (Acción y Reacción), ¿cuál es la razón por la cual las fuerzas de acción y reacción nunca se anulan recíprocamente?";
-                    q.opciones = {
-                        A: "Porque actúan simultáneamente sobre cuerpos completamente distintos.",
-                        B: "Porque poseen magnitudes diferentes dependiendo de la masa de cada objeto.",
-                        C: "Porque actúan en instantes de tiempo separados de forma infinitesimal.",
-                        D: "Porque se propagan de manera ortogonal entre si en planos cartesianos."
-                    };
-                    q.explicacion = "Las fuerzas de acción y reacción forman pares de interacción simétrica, pero al actuar en dos cuerpos físicos distintos, nunca pueden equilibrarse en un solo sistema de fuerzas.";
-                } else {
-                    q.pregunta = "¿Qué propiedad física fundamental de un sistema mecánico se asocia directamente a la existencia de fuerzas conservativas?";
-                    q.opciones = {
-                        A: "La conservación de la energía mecánica total del sistema.",
-                        B: "La anulación de la fuerza normal en rampa inclinada.",
-                        C: "La disipación de calor mediante rozamiento molecular.",
-                        D: "El incremento indefinido del momento lineal en reposo."
-                    };
-                    q.explicacion = "Las fuerzas conservativas (como la gravedad o la fuerza elástica) permiten que el trabajo realizado a lo largo de un ciclo cerrado sea nulo, conservando la energía mecánica total.";
-                }
-                q.correcta = "A";
-                break;
-        }
-
-        // Barajamos dinámicamente usando Fisher-Yates para romper patrones estáticos
-        q = shuffleOptions(q);
-        questions.push(q);
-    }
-}
-
-/**
- * Mezclador Fisher-Yates de opciones A, B, C, D
- */
-function shuffleOptions(q) {
-    let rawOptions = [
-        { key: "A", text: q.opciones.A },
-        { key: "B", text: q.opciones.B },
-        { key: "C", text: q.opciones.C },
-        { key: "D", text: q.opciones.D }
-    ];
-
-    let correctText = q.opciones[q.correcta];
-
-    for (let i = rawOptions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rawOptions[i], rawOptions[j]] = [rawOptions[j], rawOptions[i]];
-    }
-
-    let newOptions = {};
-    let newCorrectKey = "A";
-    const keys = ["A", "B", "C", "D"];
-    
-    rawOptions.forEach((opt, idx) => {
-        newOptions[keys[idx]] = opt.text;
-        if (opt.text === correctText) {
-            newCorrectKey = keys[idx];
-        }
+function generarBanco100Reactivos() {
+    // 1. Cargar las semillas base pre-calculadas
+    reactivosSemilla.forEach((p, index) => {
+        bancoPreguntas.push({
+            id: index + 1,
+            cat: p.cat,
+            preg: p.preg,
+            corr: p.corr,
+            inc: [...p.inc],
+            just: p.just,
+            pist: p.pist
+        });
     });
 
-    q.opciones = newOptions;
-    q.correcta = newCorrectKey;
-    return q;
-}
-
-function startQuiz() {
-    document.getElementById("welcome-screen").classList.add("hidden");
-    renderMatrix();
-    loadQuestion(0);
-}
-
-function renderMatrix() {
-    const grid = document.getElementById("matrix-grid");
-    grid.innerHTML = "";
-    
-    questions.forEach((q, idx) => {
-        const btn = document.createElement("button");
-        btn.id = `matrix-btn-${idx}`;
-        btn.className = "cell-nav h-9 w-full rounded-lg flex items-center justify-center text-xs font-bold transition duration-200 border bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-400";
-        btn.textContent = idx + 1;
-        btn.tabIndex = 0;
-        btn.addEventListener("click", () => loadQuestion(idx));
-        grid.appendChild(btn);
-    });
-}
-
-function loadQuestion(idx) {
-    activeIndex = idx;
-    const q = questions[idx];
-    
-    // Resaltar elemento activo en la rejilla inferior
-    document.querySelectorAll(".cell-nav").forEach(btn => btn.classList.remove("ring-4", "ring-blue-500/30", "scale-95", "border-blue-500"));
-    const activeCell = document.getElementById(`matrix-btn-${idx}`);
-    if (activeCell) activeCell.classList.add("ring-4", "ring-blue-500/30", "scale-95", "border-blue-500");
-
-    // Cargar datos
-    document.getElementById("active-category").textContent = q.categoria;
-    document.getElementById("active-number").textContent = `Reactivo ${q.id} de 150`;
-    document.getElementById("question-text-container").innerHTML = q.pregunta;
-
-    // Renderizar las opciones
-    const stack = document.getElementById("options-stack");
-    stack.innerHTML = "";
-
-    const optionKeys = ["A", "B", "C", "D"];
-    optionKeys.forEach(key => {
-        const btn = document.createElement("button");
-        btn.className = "option-card flex items-center gap-4 text-left p-4 rounded-2xl border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 transition duration-150 w-full";
-        btn.id = `option-${key}`;
-        btn.tabIndex = 0;
-        btn.innerHTML = `
-            <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-500 border border-slate-200 option-badge">${key}</span>
-            <span class="option-text flex-grow">${q.opciones[key]}</span>
-        `;
+    // 2. Extrapolación procedimental matemática para los reactivos del 10 al 100
+    for (let i = bancoPreguntas.length + 1; i <= 100; i++) {
+        const catAsignada = CATEGORIAS_EXAMEN[(i - 1) % CATEGORIAS_EXAMEN.length];
+        let preg = "", corr = "", inc = [], just = "", pist = "";
         
-        btn.addEventListener("click", () => checkAnswer(key));
-        stack.appendChild(btn);
-    });
+        // Coeficientes variables basados en el índice del bucle para garantizar unicidad matemática absoluta
+        const k = (i % 7) + 2;
+        const valA = i * 3 + 4;
+        const valB = i * 2 + 10;
 
-    // Validar estados previos
-    const feedback = document.getElementById("feedback-panel");
-    if (userAnswers[idx]) {
-        feedback.classList.remove("hidden");
-        revealCorrectStyles(idx);
-        disableOptions(true);
-    } else {
-        feedback.classList.add("hidden");
-        disableOptions(false);
-    }
+        switch (catAsignada) {
+            case "SIMPLIFICACION O REDUCCIOND E EXPRESIONES":
+                const n = i * 2;
+                preg = `Simplifique analíticamente la expresión polinómica indexada para control de distorsión armónica: $E = \\frac{${n}x^2 - ${n}y^2}{${n}x + ${n}y} - (x - 2y)$.`;
+                corr = "y";
+                inc = ["x", "2x - y", "0"];
+                just = `Factorizando por diferencia de cuadrados perfectos el numerador: ${n}(x-y)(x+y) / [${n}(x+y)] = x - y. Restando el término complementario lineal: (x - y) - (x - 2y) = x - y - x + 2y = y. Validación matricial exacta.`;
+                pist: "Efectúe la extracción del factor común escalar numérico antes de aplicar la diferencia de cuadrados.";
+                break;
 
-    updateComodinesUI();
+            case "PLANATEAMIENTO DE ECUACIONES":
+                const totalMasa = valA * 3 + 15;
+                preg = `En un laboratorio metalúrgico, una muestra gaseosa confinada de tipo A pesa el triple que una de tipo B. Si la suma total combinada de sus masas netas es de ${totalMasa} gramos, calcule la carga correspondiente a la muestra B.`;
+                corr = `${valA + 5} g`;
+                inc = [`${(valA + 5) * 2} g`, `${valA} g`, `${valA - 5} g`];
+                just = `Modelado cinético: A = 3x, B = x. Ecuación lineal unificada: 3x + x = ${totalMasa} -> 4x = ${totalMasa} -> x = ${(totalMasa)/4} = ${valA + 5}. La masa de B equivale a ${valA + 5} g.`;
+                pist = "Sume los coeficientes lineales e iguales a la constante de masa absoluta del gas.";
+                break;
 
-    // Renderizar LaTeX mediante KaTeX de forma síncrona en el DOM
-    if (typeof renderMathInElement === "function") {
-        renderMathInElement(document.body, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '\\(', right: '\\)', display: false},
-                {left: '\\[', right: '\\]', display: true}
-            ],
-            throwOnError : false
+            case "CALCULO DE EDADES":
+                const diffTime = k * 4;
+                preg = `El ciclo de degradación isotópica del elemento Helio-X triplica el tiempo de desintegración del compuesto Isótopo-Y. Si la diferencia neta entre sus periodos medios de estabilidad es de ${diffTime} microsegundos, calcule la duración de degradación de Helio-X.`;
+                corr = `${(diffTime / 2) * 3} µs`;
+                inc = [`${diffTime} µs`, `${diffTime / 2} µs`, `${diffTime * 2} µs`];
+                just = `Estructura temporal: X = 3t, Y = t. Ecuación diferencial estricta: 3t - t = ${diffTime} -> 2t = ${diffTime} -> t = ${diffTime / 2}. Por lo tanto, el elemento Helio-X computa: 3 * ${diffTime / 2} = ${(diffTime / 2) * 3} µs.`;
+                pist = "Asocie la diferencia directa de las tasas con la magnitud escalar métrica dada.";
+                break;
+
+            case "REGLA DE 3 COMPUESTA":
+                const maquinas = 4 + k;
+                const prodBase = maquinas * 10;
+                preg = `Si ${maquinas} módulos computacionales autónomos idénticos procesan ${prodBase} gigabytes de telemetría en un rango de 2 horas, ¿cuántos gigabytes procesarán ${maquinas * 2} módulos de igual capacidad si operan estables durante 6 horas continuas?`;
+                corr = `${prodBase * 6} GB`;
+                inc = [`${prodBase * 3} GB`, `${prodBase * 4} GB`, `${prodBase * 2} GB`];
+                just = `Análisis por tasas de rendimiento lineal combinado: (Módulos * Horas) / Producción = Constante. Operando la igualdad: (${maquinas} * 2) / ${prodBase} = (${maquinas * 2} * 6) / X -> El factor multiplicativo neta de escala es 6. X = ${prodBase * 6} GB.`;
+                pist = "Observe el factor de escala geométrico tanto en el número de máquinas como en el tiempo asignado.";
+                break;
+
+            case "PORCENTAJES":
+                const precioBase = 100 + (i * 5);
+                preg = `Un software de simulación termodinámica con licencia institucional cotiza en un valor de $${precioBase}. Si el desarrollador concede un descuento de promoción del 20% seguido de un recargo logístico de actualización del 10%, ¿cuál es el costo final neto?`;
+                corr = `$${(precioBase * 0.8 * 1.1).toFixed(2)}`;
+                inc = [`$${(precioBase * 0.9).toFixed(2)}`, `$${precioBase.toFixed(2)}`, `$${(precioBase * 0.85).toFixed(2)}`];
+                just = `Aplicación indexada: Descuento base del 20% implica retener el 80% del valor: ${precioBase} * 0.80 = ${precioBase * 0.8}. Incremento impositivo del 10%: ${precioBase * 0.8} * 1.10 = ${(precioBase * 0.8 * 1.1).toFixed(2)}.`;
+                pist = "Evite sumar los porcentajes algebraicamente; procese el factor multiplicativo resultante paso a paso.";
+                break;
+
+            case "MEDIA ARITMETICA":
+                const sumaBase = valA + valB + (i * 2);
+                const promedioObjetivo = Math.round(sumaBase / 3);
+                const elementoFaltante = (promedioObjetivo * 4) - (valA + valB + (i * 2));
+                preg = `El set de datos térmicos recopilados por tres estaciones meteorológicas registra valores de ${valA}°C, ${valB}°C y ${i * 2}°C. Al anexar una cuarta estación de control, la media aritmética de la red se estabiliza en ${promedioObjetivo}°C. ¿Qué temperatura midió el cuarto sensor?`;
+                corr = `${elementoFaltante}°C`;
+                inc = [`${elementoFaltante + 4}°C`, `${promedioObjetivo}°C`, `${elementoFaltante - 3}°C`];
+                just = `Ecuación de la media combinada: Suma acumulada de las tres estaciones primeras = ${valA} + ${valB} + ${i * 2} = ${valA + valB + (i * 2)}°C. Suma requerida para 4 estaciones = 4 * ${promedioObjetivo} = ${promedioObjetivo * 4}°C. Diferencia de control: ${promedioObjetivo * 4} - ${valA + valB + (i * 2)} = ${elementoFaltante}°C.`;
+                pist = "Multiplique el nuevo promedio objetivo por el número total de componentes finales para hallar la masa de datos requerida.";
+                break;
+
+            case "RAZONES Y PROPORCIONES":
+                const totalMezcla = k * 110;
+                preg = `Un compuesto químico industrial se fabrica mezclando dos reactivos líquidos purificados en una razón estricta de 3 a 8. Si el volumen total destilado del lote es de ${totalMezcla} ml, determine el volumen preciso del componente minoritario.`;
+                corr = `${(totalMezcla / 11) * 3} ml`;
+                inc = [`${(totalMezcla / 11) * 8} ml`, `${(totalMezcla / 11) * 5} ml`, `${totalMezcla / 2} ml`];
+                just = `Suma de las partes proporcionales constitutivas: 3 unidades + 8 unidades = 11 unidades métricas. Constante de volumen volumétrico: k = ${totalMezcla} / 11 = ${totalMezcla / 11}. El reactivo minoritario es: 3 * ${totalMezcla / 11} = ${(totalMezcla / 11) * 3} ml.`;
+                pist = "Divida el volumen global entre la sumatoria de los coeficientes enteros de la razón base.";
+                break;
+
+            case "PERMUTACIONES Y VARIACIONES":
+                const nElementos = 4 + (i % 3); 
+                let variacionesResult = nElementos * (nElementos - 1);
+                preg = `¿De cuántas maneras diferenciadas se pueden asignar los cargos de Coordinador de Investigación Quirúrgica y Supervisor de Bioseguridad en un panel médico compuesto por ${nElementos} especialistas certificados?`;
+                corr = `${variacionesResult}`;
+                inc = [`${nElementos}`, `${variacionesResult * 2}`, `${nElementos * 2}`];
+                just = `Puesto que los roles administrativos asignados poseen naturalezas y rangos de responsabilidad diferenciados, el orden de selección altera el resultado. Se calcula mediante variaciones sin repetición: V(${nElementos}, 2) = ${nElementos} * ${nElementos - 1} = ${variacionesResult}.`;
+                pist = "Analice que la asignación de un puesto A a un individuo X no es equivalente a asignarle el puesto B.";
+                break;
+
+            case "PROPORCIONALIDAD":
+                const pesoOriginal = 10 * k;
+                const estiramientoOriginal = 2 * k;
+                const nuevoPeso = 15 * k;
+                preg = `La elongación elástica lineal de un muelle mecánico se comporta de forma directamente proporcional a la fuerza de gravedad aplicada. Si una masa de ${pesoOriginal} kg induce un estiramiento de ${estiramientoOriginal} mm, ¿cuántos milímetros se desplazará al suspender una carga de ${nuevoPeso} kg?`;
+                corr = `${(nuevoPeso * estiramientoOriginal) / pesoOriginal} mm`;
+                inc = [`${estiramientoOriginal * 2} mm`, `${estiramientoOriginal / 2} mm`, `${((nuevoPeso * estiramientoOriginal) / pesoOriginal) + 2} mm`];
+                just = `Bajo la Ley de Hooke y proporcionalidad directa, la razón entre fuerza y elongación es constante: Peso1 / Elongación1 = Peso2 / Elongación2. Sustituyendo: ${pesoOriginal} / ${estiramientoOriginal} = ${nuevoPeso} / X -> X = (${nuevoPeso} * ${estiramientoOriginal}) / ${pesoOriginal} = ${(nuevoPeso * estiramientoOriginal) / pesoOriginal} mm.`;
+                pist = "Plantee una igualdad de razones cruzadas directas ya que a mayor peso, mayor es la fuerza de deformación elástica.";
+                break;
+        }
+
+        bancoPreguntas.push({
+            id: i,
+            cat: catAsignada,
+            preg: preg,
+            corr: corr,
+            inc: inc,
+            just: just,
+            pist: pist
         });
     }
 }
 
-function checkAnswer(chosenKey) {
-    if (userAnswers[activeIndex]) return;
+/**
+ * ALGORITMO ROMPE-PATRONES DE FISHER-YATES
+ * Garantiza la aleatorización total de las opciones eliminando cualquier sesgo posicional.
+ */
+function mezclarOpcionesAlgoritmo(opciones) {
+    const arr = [...opciones];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
 
-    const q = questions[activeIndex];
-    const isCorrect = (chosenKey === q.correcta);
+// Inicialización de la Interfaz y Event Listeners del Motor Core
+document.addEventListener("DOMContentLoaded", () => {
+    generarBanco100Reactivos();
+    inicializarMatrizNavegacionDOM();
+    cargarReactivoEspecifico(1);
+    actualizarContadoresGlobales();
+});
 
-    userAnswers[activeIndex] = {
-        chosen: chosenKey,
-        isCorrect: isCorrect
+function inicializarMatrizNavegacionDOM() {
+    const grid = document.getElementById("matrixGrid");
+    grid.innerHTML = "";
+    
+    for (let i = 1; i <= 100; i++) {
+        const celda = document.createElement("div");
+        celda.className = "matrix-item";
+        celda.id = `node-${i}`;
+        celda.innerText = i.toString().padStart(2, '0');
+        celda.onclick = () => cargarReactivoEspecifico(i);
+        grid.appendChild(celda);
+    }
+}
+
+function cargarReactivoEspecifico(id) {
+    idPreguntaActiva = id;
+    const pregunta = bancoPreguntas.find(p => p.id === id);
+    if (!pregunta) return;
+
+    // Resaltar nodo activo en la matriz lateral
+    document.querySelectorAll(".matrix-item").forEach(node => node.classList.remove("focused-node"));
+    const nodoActivo = document.getElementById(`node-${id}`);
+    if (nodoActivo) nodoActivo.classList.add("focused-node");
+
+    // Resetear visibilidad del panel de comodines
+    document.getElementById("wildcardOutput").classList.add("hidden");
+
+    // Configurar metadatos del reactivo
+    document.getElementById("questionIdLabel").innerText = `Reactivo #${id.toString().padStart(3, '0')}`;
+    document.getElementById("questionCategory").innerText = pregunta.cat;
+    document.getElementById("questionText").innerText = pregunta.preg;
+
+    // Verificar e inicializar el estado de comodines de esta pregunta
+    if (!trackingComodines[id]) {
+        trackingComodines[id] = { c5050: false, cDiscard: false, cTutor: false, cStats: false };
+    }
+    evaluarEstadoComodinesUI();
+
+    // Estructurar u obtener opciones ordenadas/mezcladas
+    const container = document.getElementById("optionsContainer");
+    container.innerHTML = "";
+
+    if (!progresoExamen[id]) {
+        // Primera carga del reactivo: Mezclamos de forma disruptiva
+        const opcionesEstructuradas = [
+            { texto: pregunta.corr, correcto: true },
+            ...pregunta.inc.map(txt => ({ texto: txt, correcto: false }))
+        ];
+        pregunta.opcionesMezcladasCache = mezclarOpcionesAlgoritmo(opcionesEstructuradas);
+    }
+
+    pregunta.opcionesMezcladasCache.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-node";
+        btn.innerHTML = `<strong style="color:var(--accent-blue); margin-right: 14px;">${String.fromCharCode(65 + idx)}</strong> <span class="opt-text">${opt.texto}</span>`;
+        btn.dataset.correcto = opt.correcto;
+        btn.dataset.index = idx;
+        btn.onclick = () => validarSeleccionUsuario(btn, opt.correcto, id);
+        container.appendChild(btn);
+    });
+
+    // Control de renderizado post-respuesta (Persistencia de estado al navegar)
+    if (progresoExamen[id]) {
+        forzarBloqueoYRetroalimentacion(id);
+    } else {
+        document.getElementById("feedbackPanel").classList.add("hidden");
+    }
+}
+
+function validarSeleccionUsuario(botonSeleccionado, esCorrecto, id) {
+    if (progresoExamen[id]) return; // Evitar mutaciones secundarias de respuestas ya fijadas
+
+    progresoExamen[id] = {
+        idxSeleccionado: botonSeleccionado.dataset.index,
+        estado: esCorrecto ? "CORRECT" : "INCORRECT"
     };
 
-    revealCorrectStyles(activeIndex);
-    disableOptions(true);
-
-    // Reflejar estado cromático en la matriz inferior
-    const matrixBtn = document.getElementById(`matrix-btn-${activeIndex}`);
-    if (matrixBtn) {
-        matrixBtn.classList.remove("bg-slate-100", "border-slate-200", "text-slate-500");
-        if (isCorrect) {
-            matrixBtn.classList.add("bg-emerald-500", "border-emerald-600", "text-white");
-        } else {
-            matrixBtn.classList.add("bg-rose-500", "border-rose-600", "text-white");
-        }
+    // Actualizar nodo de matriz visual
+    const nodoMatriz = document.getElementById(`node-${id}`);
+    if (nodoMatriz) {
+        nodoMatriz.classList.add(esCorrecto ? "node-correct" : "node-incorrect");
     }
 
-    updateScore();
+    actualizarContadoresGlobales();
+    forzarBloqueoYRetroalimentacion(id);
 }
 
-function revealCorrectStyles(idx) {
-    const q = questions[idx];
-    const ans = userAnswers[idx];
-    const feedback = document.getElementById("feedback-panel");
-    const explanation = document.getElementById("explanation-box");
-    const fTitle = document.getElementById("feedback-title");
-    const fIcon = document.getElementById("feedback-icon");
+function forzarBloqueoYRetroalimentacion(id) {
+    const registro = progresoExamen[id];
+    const pregunta = bancoPreguntas.find(p => p.id === id);
+    const botones = document.querySelectorAll("#optionsContainer .option-node");
 
-    feedback.classList.remove("hidden");
-    explanation.innerHTML = `<strong>Análisis Teórico Científico:</strong><br>${q.explicacion}`;
+    botones.forEach(btn => {
+        btn.disabled = true;
+        const esCorrecto = btn.dataset.correcto === "true";
+        const esElSeleccionado = btn.dataset.index === registro.idxSeleccionado;
 
-    if (ans.isCorrect) {
-        feedback.className = "bg-emerald-50 border border-emerald-200 rounded-3xl p-6 shadow-sm transition-all duration-300";
-        fTitle.textContent = "¡Respuesta Correcta! Sumas 1 punto.";
-        fTitle.className = "font-extrabold text-emerald-950 text-base md:text-lg";
-        fIcon.className = "w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-lg";
-        fIcon.textContent = "✓";
-    } else {
-        feedback.className = "bg-rose-50 border border-rose-200 rounded-3xl p-6 shadow-sm transition-all duration-300";
-        fTitle.textContent = `Respuesta Incorrecta. La opción científica correcta era la (${q.correcta})`;
-        fTitle.className = "font-extrabold text-rose-950 text-base md:text-lg";
-        fIcon.className = "w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-bold text-lg";
-        fIcon.textContent = "✗";
-    }
-
-    // Pintar tarjetas (Verde/Rojo)
-    const optionKeys = ["A", "B", "C", "D"];
-    optionKeys.forEach(key => {
-        const card = document.getElementById(`option-${key}`);
-        if (card) {
-            const badge = card.querySelector(".option-badge");
-            if (key === q.correcta) {
-                card.className = "option-card flex items-center gap-4 text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 transition duration-150 w-full";
-                badge.className = "w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold border border-emerald-600 option-badge";
-            } else if (key === ans.chosen) {
-                card.className = "option-card flex items-center gap-4 text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50/50 transition duration-150 w-full";
-                badge.className = "w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold border border-rose-600 option-badge";
-            } else {
-                card.className = "option-card flex items-center gap-4 text-left p-4 rounded-xl border border-slate-100 opacity-40 bg-slate-50 transition duration-150 w-full";
-            }
+        if (esCorrecto) {
+            btn.classList.add("state-correct");
+        } else if (esElSeleccionado && !esCorrecto) {
+            btn.classList.add("state-incorrect");
         }
     });
 
-    if (Object.keys(userAnswers).length === 150) {
-        showFinalResults();
+    // Desplegar panel inferior de justificación
+    const feedbackPanel = document.getElementById("feedbackPanel");
+    feedbackPanel.classList.remove("hidden");
+    document.getElementById("feedbackText").innerText = pregunta.just;
+
+    // Desactivar totalmente la barra de asistencia
+    bloquearBarraComodinesCompleta();
+}
+
+/**
+ * SISTEMA DE ASISTENCIA Y COMODINES LOGARÍTMICOS
+ */
+function evaluarEstadoComodinesUI() {
+    if (progresoExamen[idPreguntaActiva]) {
+        bloquearBarraComodinesCompleta();
+        return;
     }
 
-    if (typeof renderMathInElement === "function") {
-        renderMathInElement(explanation, { throwOnError: false });
-    }
+    const tracker = trackingComodines[idPreguntaActiva];
+    document.getElementById("btn5050").disabled = tracker.c5050;
+    // Si ya usó 50/50, el descarte simple no tiene sentido matemático
+    document.getElementById("btnDiscard").disabled = tracker.cDiscard || tracker.c5050;
+    document.getElementById("btnTutor").disabled = tracker.cTutor;
+    document.getElementById("btnStats").disabled = tracker.cStats;
 }
 
-function disableOptions(status) {
-    document.querySelectorAll(".option-card").forEach(btn => {
-        btn.disabled = status;
+function bloquearBarraComodinesCompleta() {
+    document.getElementById("btn5050").disabled = true;
+    document.getElementById("btnDiscard").disabled = true;
+    document.getElementById("btnTutor").disabled = true;
+    document.getElementById("btnStats").disabled = true;
+}
+
+function ejecutarComodina5050() {
+    trackingComodines[idPreguntaActiva].c5050 = true;
+    const botones = document.querySelectorAll("#optionsContainer .option-node");
+    let eliminados = 0;
+
+    botones.forEach(btn => {
+        if (btn.dataset.correcto === "false" && eliminados < 2) {
+            btn.classList.add("state-hidden");
+            eliminados++;
+        }
     });
+    evaluarEstadoComodinesUI();
 }
 
-function updateScore() {
-    let score = 0;
-    Object.values(userAnswers).forEach(ans => {
-        if (ans.isCorrect) score++;
-    });
-    document.getElementById("score-display").textContent = `${score} Puntos`;
-    document.getElementById("final-score").textContent = `${score} / 150`;
-}
+function ejecutarComodinarDescartar() {
+    trackingComodines[idPreguntaActiva].cDiscard = true;
+    const botones = document.querySelectorAll("#optionsContainer .option-node");
 
-function goToNextQuestion() {
-    let found = false;
-    for (let i = 0; i < 150; i++) {
-        let checkIdx = (activeIndex + i + 1) % 150;
-        if (!userAnswers[checkIdx]) {
-            loadQuestion(checkIdx);
-            found = true;
-            break;
+    for (let btn of botones) {
+        if (btn.dataset.correcto === "false" && !btn.classList.contains("state-hidden")) {
+            btn.classList.add("state-hidden");
+            break; // Ocultamos solo uno al azar
         }
     }
-    if (!found) {
-        showFinalResults();
-    }
+    evaluarEstadoComodinesUI();
 }
 
-// LÓGICA DE COMODINES
-function use5050() {
-    if (usedComodines["5050"] || userAnswers[activeIndex]) return;
-
-    const q = questions[activeIndex];
-    const incorrectKeys = ["A", "B", "C", "D"].filter(key => key !== q.correcta);
+function ejecutarComodinarTutor() {
+    trackingComodines[idPreguntaActiva].cTutor = true;
+    const pregunta = bancoPreguntas.find(p => p.id === idPreguntaActiva);
+    const panel = document.getElementById("wildcardOutput");
     
-    // Mezclamos opciones incorrectas para ocultar 2 aleatorias
-    for (let i = incorrectKeys.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [incorrectKeys[i], incorrectKeys[j]] = [incorrectKeys[j], incorrectKeys[i]];
-    }
-
-    document.getElementById(`option-${incorrectKeys[0]}`).classList.add("hidden-option");
-    document.getElementById(`option-${incorrectKeys[1]}`).classList.add("hidden-option");
-
-    usedComodines["5050"] = true;
-    updateComodinesUI();
+    panel.classList.remove("hidden");
+    panel.innerHTML = `<strong>💡 Sugerencia del Tutor Académico:</strong> ${pregunta.pist}`;
+    evaluarEstadoComodinesUI();
 }
 
-function useEliminateOne() {
-    if (usedComodines["eliminar"] || userAnswers[activeIndex]) return;
+function ejecutarComodinarEstadistica() {
+    trackingComodines[idPreguntaActiva].cStats = true;
+    const pregunta = bancoPreguntas.find(p => p.id === idPreguntaActiva);
+    const botones = document.querySelectorAll("#optionsContainer .option-node");
+    const panel = document.getElementById("wildcardOutput");
 
-    const q = questions[activeIndex];
-    const incorrectKeys = ["A", "B", "C", "D"].filter(key => key !== q.correcta);
-    
-    const discardKey = incorrectKeys[Math.floor(Math.random() * incorrectKeys.length)];
-    document.getElementById(`option-${discardKey}`).classList.add("hidden-option");
-
-    usedComodines["eliminar"] = true;
-    updateComodinesUI();
-}
-
-function useCallFriend() {
-    if (usedComodines["llamada"] || userAnswers[activeIndex]) return;
-
-    const q = questions[activeIndex];
-    const tutorExplanation = `«¡Hola! Tras analizar con cuidado el modelo físico de este ejercicio, estoy seguro de que la opción correcta es la <strong>(${q.correcta})</strong>. Si aplicas la fórmula del módulo correspondiente verás que coincide perfectamente.»`;
-
-    openModal("📞 Llamada al Tutor Académico", "Recomendación experta", tutorExplanation);
-
-    usedComodines["llamada"] = true;
-    updateComodinesUI();
-}
-
-function useAudienceHelp() {
-    if (usedComodines["publico"] || userAnswers[activeIndex]) return;
-
-    const q = questions[activeIndex];
-    const keys = ["A", "B", "C", "D"];
-    let stats = {};
-    
-    let correctPercentage = Math.floor(Math.random() * 20) + 65; // Sesgo de probabilidad para la correcta (65% - 85%)
-    let remaining = 100 - correctPercentage;
-
-    keys.forEach(key => {
-        if (key === q.correcta) {
-            stats[key] = correctPercentage;
-        } else {
-            let chunk = Math.floor(Math.random() * remaining);
-            stats[key] = chunk;
-            remaining -= chunk;
+    let letraCorrecta = "A";
+    botones.forEach(btn => {
+        if (btn.dataset.correcto === "true") {
+            letraCorrecta = btn.innerHTML.match(/<strong>(.*?)<\/strong>/)[1].trim();
         }
     });
 
-    keys.forEach(key => {
-        if (key !== q.correcta && remaining > 0) {
-            stats[key] += remaining;
-            remaining = 0;
-        }
+    // Generar distribución normalizada simulada orientada al éxito académico
+    const pctCorrecto = Math.floor(Math.random() * 15) + 70; // Rango 70% - 85%
+    const pctRestante = 100 - pctCorrecto;
+    const dist1 = Math.floor(pctRestante * 0.5);
+    const dist2 = pctRestante - dist1;
+
+    panel.classList.remove("hidden");
+    panel.innerHTML = `<strong>📊 Muestra Muestral (N=1,420 postulantes):</strong> El ${pctCorrecto}% de los estudiantes universitarios de semestres superiores marcó la opción <strong>(${letraCorrecta})</strong>. El resto se distribuye entre las opciones distractoras con un ${dist1}% y ${dist2}%.`;
+    evaluarEstadoComodinesUI();
+}
+
+function actualizarContadoresGlobales() {
+    let correctas = 0;
+    let incorrectas = 0;
+
+    Object.values(progresoExamen).forEach(r => {
+        if (r.estado === "CORRECT") correctas++;
+        if (r.estado === "INCORRECT") incorrectas++;
     });
 
-    let displayHTML = `
-        <div class="space-y-3">
-            <p class="mb-4 text-xs font-bold text-slate-500">Distribución porcentual de los votos:</p>
-            ${keys.map(key => `
-                <div>
-                    <div class="flex justify-between text-xs font-extrabold mb-1">
-                        <span>Opción ${key}</span>
-                        <span>${stats[key]}%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                        <div class="bg-blue-900 h-2.5 rounded-full transition-all" style="width: ${stats[key]}%"></div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-
-    openModal("📊 Sondeo de Audiencia", "Resultados estadísticos simulados del grupo de estudio", displayHTML);
-
-    usedComodines["publico"] = true;
-    updateComodinesUI();
+    document.getElementById("globalCorrect").innerText = correctas;
+    document.getElementById("globalIncorrect").innerText = incorrectas;
 }
-
-function updateComodinesUI() {
-    document.getElementById("comodin-5050").disabled = usedComodines["5050"] || userAnswers[activeIndex] !== undefined;
-    document.getElementById("comodin-eliminar").disabled = usedComodines["eliminar"] || userAnswers[activeIndex] !== undefined;
-    document.getElementById("comodin-llamada").disabled = usedComodines["llamada"] || userAnswers[activeIndex] !== undefined;
-    document.getElementById("comodin-publico").disabled = usedComodines["publico"] || userAnswers[activeIndex] !== undefined;
-
-    ["5050", "eliminar", "llamada", "publico"].forEach(key => {
-        const btn = document.getElementById(`comodin-${key}`);
-        if (btn) {
-            if (usedComodines[key]) {
-                btn.classList.add("opacity-40", "cursor-not-allowed");
-                btn.classList.remove("hover:bg-slate-100");
-            } else {
-                btn.classList.remove("opacity-40", "cursor-not-allowed");
-                btn.classList.add("hover:bg-slate-100");
-            }
-        }
-    });
-}
-
-function openModal(title, subtitle, content) {
-    document.getElementById("modal-title").textContent = title;
-    document.getElementById("modal-subtitle").textContent = subtitle;
-    document.getElementById("modal-content").innerHTML = content;
-    document.getElementById("custom-modal").classList.remove("hidden");
-}
-
-function closeModal() {
-    document.getElementById("custom-modal").classList.add("hidden");
-}
-
-function showFinalResults() {
-    document.getElementById("final-modal").classList.remove("hidden");
-}
-
-function restartQuiz() {
-    userAnswers = {};
-    usedComodines = { "5050": false, "eliminar": false, "llamada": false, "publico": false };
-    document.getElementById("final-modal").classList.add("hidden");
-    
-    // Limpiar clases de la matriz inferior
-    for(let i=0; i<150; i++){
-        const matrixBtn = document.getElementById(`matrix-btn-${i}`);
-        if (matrixBtn) {
-            matrixBtn.className = "cell-nav h-9 w-full rounded-lg flex items-center justify-center text-xs font-bold transition duration-200 border bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-400";
-        }
-    }
-    
-    updateScore();
-    loadQuestion(0);
-}
-
-// BINDEAR TODOS LOS EVENTOS DE MANERA SEGURA CUANDO EL DOM ESTÉ TOTALMENTE CARGADO
-document.addEventListener("DOMContentLoaded", () => {
-    generateQuestionBank();
-
-    // Eventos de botones estáticos
-    document.getElementById("btn-start-quiz").addEventListener("click", startQuiz);
-    document.getElementById("btn-next-question").addEventListener("click", goToNextQuestion);
-    document.getElementById("btn-close-modal").addEventListener("click", closeModal);
-    document.getElementById("btn-restart-quiz").addEventListener("click", restartQuiz);
-
-    // Eventos de comodines
-    document.getElementById("comodin-5050").addEventListener("click", use5050);
-    document.getElementById("comodin-eliminar").addEventListener("click", useEliminateOne);
-    document.getElementById("comodin-llamada").addEventListener("click", useCallFriend);
-    document.getElementById("comodin-publico").addEventListener("click", useAudienceHelp);
-});
-
-// Navegación accesible por teclado (Enter en tarjetas de respuestas enfocadas)
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        const activeElement = document.activeElement;
-        if (activeElement && activeElement.classList.contains("option-card")) {
-            activeElement.click();
-        }
-    }
-});
