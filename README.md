@@ -1,4 +1,4 @@
-# ⚛️ Simulador de Física y Ciencias Exactas de Nivel Universitario
+# ⚛️ Simulador Numérico
 
 Este es un entorno web modular de alto rendimiento diseñado específicamente para la autoevaluación, el diagnóstico avanzado y el entrenamiento intensivo de estudiantes en el área de física y ciencias exactas pre-politécnicas.
 
