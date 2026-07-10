@@ -14,19 +14,26 @@ function generarBanco100Ejercicios() {
         let tema = TEMAS[(i - 1) % TEMAS.length];
         let preg = "", corr = "", inc = [], just = "", pist = "";
 
-        // Variables dinámicas mutables por iteración para romper cualquier patrón repetitivo
-        let varA = i * 3 + 2;
-        let varB = i * 2 + 5;
-        let varC = i + 12;
+        // Variables con variaciones numéricas controladas sin duplicados estructurales
+        let varA = i * 2 + 3;
+        let varB = i + 4;
 
         switch (tema) {
             case "REDUCCIÓN DE EXPRESIONES":
-                let coef = i + 2;
-                preg = `Simplifique al máximo la siguiente expresión algebraica para el reactivo experimental número ${i}: <br><br> $$E = \\frac{${coef}x^2 - ${coef}y^2}{${coef}x + ${coef}y} - (x - 3y)$$`;
-                corr = `$2y$`;
-                inc = [`$x$`, `$2x - y$`, `$0$`];
-                just = `Al aplicar la identidad de diferencia de cuadrados en el numerador: $${coef}(x-y)(x+y)$, se simplifica el factor con el denominador resultando en $(x - y)$. Al restar el polinomio complementario: $(x - y) - (x - 3y) = x - y - x + 3y = 2y$.`;
-                pist = "Factorice el numerador usando la diferencia de cuadrados notables: $a^2 - b^2 = (a-b)(a+b)$.";
+                // Se calibró para el nivel exacto solicitado de leyes de exponentes con bases x, y, w
+                let expX = (i % 3) + 2; 
+                let expW = (i % 2) + 4;
+                preg = `Simplifique la siguiente expresión aplicando las leyes de los exponentes para el reactivo nº ${i}:<br><br>$$\\frac{x^{e} y^{-1/3} w^{-3}}{x^{-${expX}} w^{-${expW}} y^{-1/2}}$$ donde el exponente entero de x arriba es $e = ${expX}$.`;
+                
+                // Resultado teórico simplificado para esa estructura exacta
+                corr = `$x^{${expX * 2}} y^{1/6} w^{${expW - 3}}$`;
+                inc = [
+                    `$x^{0} y^{-5/6} w^{${expW + 3}}$`,
+                    `$x^{${expX}} y^{1/2} w^{-6}$`,
+                    `$x^{${expX * 2}} y^{-1/6} w^{1}$`
+                ];
+                just = `Para simplificar, restamos los exponentes del numerador menos el denominador: <br> Para $x$: $${expX} - (-${expX}) = ${expX * 2}$.<br> Para $y$: $-\\frac{1}{3} - (-\\frac{1}{2}) = \\frac{1}{6}$.<br> Para $w$: $-3 - (-${expW}) = ${expW - 3}$. Resultado: $x^{${expX * 2}} y^{1/6} w^{${expW - 3}}$.`;
+                pist = "Recuerde aplicar la propiedad de la división de potencias de igual base: $\\frac{a^m}{a^n} = a^{m-n}$.";
                 break;
 
             case "PLANTEO DE ECUACIONES":
@@ -40,10 +47,6 @@ function generarBanco100Ejercicios() {
 
             case "CÁLCULO DE EDADES":
                 let factorEdad = i + 5;
-                let sumaPasada = factorEdad * 5;
-                preg = `La edad cronológica de un director de laboratorio duplica la edad de su analista principal. Si hace exactamente $${factorEdad}$ años, la suma de sus edades equivalía a $${sumaPasada}$ años, ¿cuál es la edad actual del analista?`;
-                corr = `$${factorEdad * 7 / 3 % 1 === 0 ? factorEdad + 10 : factorEdad + 12}$ años`; 
-                // Asegurando números enteros consistentes y únicos por cada ID
                 let edadAnalista = factorEdad + 15;
                 let edadDirector = edadAnalista * 2;
                 let sumaComprobacion = (edadDirector - factorEdad) + (edadAnalista - factorEdad);
@@ -116,7 +119,7 @@ function generarBanco100Ejercicios() {
                 pist = "Cuando intervienen todos los elementos del conjunto y el orden posicional es un factor diferenciador, aplique factoriales.";
                 break;
 
-            default: // PROPORCIONALIDAD PURA
+            default: 
                 let distBase = 30 + i;
                 let tiempoBase = 2;
                 let nuevaDist = distBase * 3;
@@ -198,7 +201,6 @@ function cargarPregunta(id) {
         document.getElementById("feedbackPanel").classList.add("hidden");
     }
 
-    // Forzar re-renderizado dinámico de MathJax para las nuevas expresiones cargadas
     if (window.MathJax && window.MathJax.typeset) {
         MathJax.typeset();
     }
