@@ -14,69 +14,117 @@ function generarBanco100Ejercicios() {
         let tema = TEMAS[(i - 1) % TEMAS.length];
         let preg = "", corr = "", inc = [], just = "", pist = "";
 
+        // Variables dinámicas mutables por iteración para romper cualquier patrón repetitivo
+        let varA = i * 3 + 2;
+        let varB = i * 2 + 5;
+        let varC = i + 12;
+
         switch (tema) {
             case "REDUCCIÓN DE EXPRESIONES":
-                preg = `Simplifique al máximo la expresión algebraica para el ejercicio número ${i}: E = [(${i * 2}x² - ${i * 2}y²) / (${i * 2}x + ${i * 2}y)] - (x - 2y).`;
-                corr = "y";
-                inc = ["x", "2x - y", "0"];
-                just = `Al factorizar la diferencia de cuadrados en el numerador se simplifica a (x - y). Al restar (x - 2y), el resultado final neto es 'y'.`;
-                pist = "Use la identidad algebraico de diferencia de cuadrados en el numerador.";
+                let coef = i + 2;
+                preg = `Simplifique al máximo la siguiente expresión algebraica para el reactivo experimental número ${i}: <br><br> $$E = \\frac{${coef}x^2 - ${coef}y^2}{${coef}x + ${coef}y} - (x - 3y)$$`;
+                corr = `$2y$`;
+                inc = [`$x$`, `$2x - y$`, `$0$`];
+                just = `Al aplicar la identidad de diferencia de cuadrados en el numerador: $${coef}(x-y)(x+y)$, se simplifica el factor con el denominador resultando en $(x - y)$. Al restar el polinomio complementario: $(x - y) - (x - 3y) = x - y - x + 3y = 2y$.`;
+                pist = "Factorice el numerador usando la diferencia de cuadrados notables: $a^2 - b^2 = (a-b)(a+b)$.";
                 break;
+
             case "PLANTEO DE ECUACIONES":
-                preg = `En una bodega, tres contenedores guardan sacos de grano de modo que el segundo tiene el doble del primero y el tercero posee el triple del segundo. Si el total es de ${i * 9} kg, ¿cuánto contiene el primero?`;
-                corr = `${i} kg`;
-                inc = [`${i * 2} kg`, `${i * 3} kg`, `${i * 4} kg`];
-                just = `Ecuación: x + 2x + 6x = ${i * 9} -> 9x = ${i * 9} -> x = ${i} kg.`;
-                pist = "Sume los contenedores expresados en función de x (x, 2x y 6x).";
+                let totalSacos = varA * 7;
+                preg = `En un almacén de distribución automatizado, el contenedor beta contiene el doble de sacos que el contenedor alfa, y el contenedor gamma almacena el cuádruple del contenedor beta. Si la auditoría registra un inventario neto de $${totalSacos}$ sacos entre los tres sectores, ¿cuántos sacos almacena específicamente el contenedor alfa?`;
+                corr = `$${varA}$ sacos`;
+                inc = [`$${varA * 2}$ sacos`, `$${varA * 4}$ sacos`, `$${Math.floor(totalSacos / 3)}$ sacos`];
+                just = `Definiendo el contenedor alfa como $x$, el modelo lineal es: $x + 2x + 8x = ${totalSacos} \\Rightarrow 11x = ${totalSacos} \\Rightarrow x = ${varA}$.`;
+                pist = "Plantee la ecuación sumando las proporciones relativas: $x + 2x + 8x = Total$.";
                 break;
+
             case "CÁLCULO DE EDADES":
-                preg = `La edad de un ingeniero duplica la de su asistente. Hace exactamente ${i} años la suma de sus edades era de ${i * 4} años. ¿Cuál es la edad actual del asistente?`;
-                corr = `${i * 2} años`;
-                inc = [`${i} años`, `${i * 3} años`, `${i * 4} años`];
-                just = `Ecuación retrospectiva: (2x - ${i}) + (x - ${i}) = ${i * 4} -> 3x = ${i * 6} -> x = ${i * 2} años.`;
-                pist = "Recuerde restar los años pasados a ambos personajes por igual.";
+                let factorEdad = i + 5;
+                let sumaPasada = factorEdad * 5;
+                preg = `La edad cronológica de un director de laboratorio duplica la edad de su analista principal. Si hace exactamente $${factorEdad}$ años, la suma de sus edades equivalía a $${sumaPasada}$ años, ¿cuál es la edad actual del analista?`;
+                corr = `$${factorEdad * 7 / 3 % 1 === 0 ? factorEdad + 10 : factorEdad + 12}$ años`; 
+                // Asegurando números enteros consistentes y únicos por cada ID
+                let edadAnalista = factorEdad + 15;
+                let edadDirector = edadAnalista * 2;
+                let sumaComprobacion = (edadDirector - factorEdad) + (edadAnalista - factorEdad);
+                preg = `La edad de un astrofísico es actualmente el doble de la de su asistente de campo. Si hace $${factorEdad}$ años la suma de sus respectivas edades era de $${sumaComprobacion}$ años, determine la edad actual del asistente.`;
+                corr = `$${edadAnalista}$ años`;
+                inc = [`$${edadAnalista - 5}$ años`, `$${edadAnalista + 5}$ años`, `$${factorEdad * 2}$ años`];
+                just = `Estableciendo la ecuación en el pasado: $(2x - ${factorEdad}) + (x - ${factorEdad}) = ${sumaComprobacion} \\Rightarrow 3x - ${factorEdad * 2} = ${sumaComprobacion} \\Rightarrow 3x = ${sumaComprobacion + factorEdad * 2} \\Rightarrow x = ${edadAnalista}$.`;
+                pist = "Reste la cantidad de años transcurridos a ambas variables individuales antes de realizar la suma.";
                 break;
+
             case "REGLA DE 3 COMPUESTA":
-                preg = `Si ${i + 2} operarios confeccionan ${i * 4} prendas en 2 días, ¿cuántas prendas elaborarán ${(i + 2) * 2} operarios trabajando bajo las mismas condiciones durante 4 días?`;
-                corr = `${i * 16} prendas`;
-                inc = [`${i * 8} prendas`, `${i * 12} prendas`, `${i * 20} prendas`];
-                just = `Duplicar operarios duplica la producción, y duplicar los días la vuelve a duplicar. Multiplicador total = 4 veces (${i * 4} * 4).`;
-                pist = "Analice las relaciones directamente proporcionales paso a paso.";
+                let operarios = varB;
+                let horas = 6 + (i % 4);
+                let eficienciaBase = 100 + (i * 5);
+                preg = `Un equipo de $${operarios}$ técnicos trabajando $${horas}$ horas diarias logran calibrar un lote de servidores con un rendimiento indexado de $${eficienciaBase}$ unidades. ¿Cuántas unidades calibrarán $${operarios * 2}$ técnicos si optimizan su jornada a $${horas + 2}$ horas diarias bajo las mismas condiciones de entorno?`;
+                let prodFinal = Math.floor((eficienciaBase * (operarios * 2) * (horas + 2)) / (operarios * horas));
+                corr = `$${prodFinal}$ unidades`;
+                inc = [`$${prodFinal - varB}$ unidades`, `$${prodFinal * 2}$ unidades`, `$${Math.floor(prodFinal / 2)}$ unidades`];
+                just = `Aplicando la proporcionalidad compuesta: $\\frac{O_1 \\cdot H_1}{P_1} = \\frac{O_2 \\cdot H_2}{P_2}$. Despejando la incógnita de producción resulta en un total exacto de $${prodFinal}$ unidades.`;
+                pist = "Las variables operarios y horas mantienen una relación directamente proporcional con la producción.";
                 break;
+
             case "PORCENTAJES":
-                preg = `Un lote de insumos cuyo precio base es $${i * 100} recibe un descuento del 20% y luego un recargo del 10%. ¿Cuál es el precio final neto de venta?`;
-                corr = `$${(i * 100 * 0.8 * 1.1).toFixed(2)}`;
-                inc = [`$${(i * 90).toFixed(2)}`, `$${(i * 100).toFixed(2)}`, `$${(i * 85.5).toFixed(2)}`];
-                just = `Multiplicación secuencial encadenada: Precio original * 0.80 (descuento) * 1.10 (recargo).`;
-                pist = "Aplique los porcentajes consecutivamente, no los reste de forma lineal.";
+                let costoInicial = 250 + (i * 15);
+                let dsc = 10 + (i % 3) * 5;
+                let IVA = 12;
+                let despuesDsc = costoInicial * (1 - dsc/100);
+                let netoFinal = despuesDsc * (1 + IVA/100);
+                preg = `El presupuesto base para el desarrollo de un componente de software especializado es de $$\\$${costoInicial}$$. Si se otorga un descuento comercial de contingencia del $${dsc}\\%$ pero posteriormente se indexa un recargo fiscal obligatorio del $${IVA}\\%$, ¿cuál es el costo neto final de la transacción?`;
+                corr = `$\\$${netoFinal.toFixed(2)}$`;
+                inc = [`$\\$${(costoInicial * 0.95).toFixed(2)}$`, `$\\$${costoInicial.toFixed(2)}$`, `$\\$${(costoInicial * (1 - (dsc-IVA)/100)).toFixed(2)}$`];
+                just = `Cálculo geométrico encadenado: $${costoInicial} \\cdot (1 - 0.${dsc}) \\cdot (1 + 0.${IVA}) = ${netoFinal.toFixed(2)}$.`;
+                pist = "Aplique los factores multiplicativos de forma sucesiva; evite sumar o restar los porcentajes directamente.";
                 break;
+
             case "MEDIA ARITMÉTICA":
-                preg = `Los pesos de tres muestras consecutivas son ${i} g, ${i * 2} g y ${i * 3} g. Al incorporar una cuarta muestra, el promedio aumenta exactamente a ${i * 3} g. ¿Qué peso registró la cuarta muestra?`;
-                corr = `${i * 6} g`;
-                inc = [`${i * 4} g`, `${i * 5} g`, `${i * 3} g`];
-                just = `Suma inicial = ${i * 6}. Suma requerida para promediar ${i * 3} con 4 muestras = ${i * 12}. Diferencia = ${i * 6} g.`;
-                pist = "Multiplique el nuevo promedio por 4 para hallar la suma total necesaria.";
+                let n1 = 10 + i;
+                let n2 = 15 + i * 2;
+                let n3 = 20 + i * 3;
+                let promDeseado = n3 + 5;
+                let sumaTres = n1 + n2 + n3;
+                let n4 = (promDeseado * 4) - sumaTres;
+                preg = `Los valores de conductividad registrados en tres celdas electroquímicas son $${n1}\\text{ mS}$, $${n2}\\text{ mS}$ y $${n3}\\text{ mS}$. Al añadir una cuarta celda testigo, la media aritmética global se eleva exactamente a $${promDeseado}\\text{ mS}$. Calcule la magnitud de la cuarta muestra.`;
+                corr = `$${n4}\\text{ mS}$`;
+                inc = [`$${n4 - 5}\\text{ mS}$`, `$${n4 + 10}\\text{ mS}$`, `$${promDeseado}\\text{ mS}$`];
+                just = `La suma acumulada de los tres primeros elementos es $${sumaTres}$. Para que el promedio de 4 elementos sea $${promDeseado}$, la sumatoria total obligatoria debe ser $4 \\cdot ${promDeseado} = ${promDeseado * 4}$. Por sustracción: $${promDeseado * 4} - ${sumaTres} = ${n4}$.`;
+                pist = "Multiplique la nueva media por el número total de muestras (4) para deducir la masa del dato faltante.";
                 break;
+
             case "RAZONES Y PROPORCIONES":
-                preg = `La pintura blanca y azul en una mezcla está en la razón de 2 a 3. Si el volumen total final es de ${i * 5} litros, ¿cuántos litros corresponden al color mayoritario?`;
-                corr = `${i * 3} L`;
-                inc = [`${i * 2} L`, `${i * 5} L`, `${i * 1} L`];
-                just = `Proporción: 2k + 3k = ${i * 5} -> 5k = ${i * 5} -> k = ${i}. El mayoritario es 3k = ${i * 3} L.`;
-                pist = "Divida el volumen total entre la suma de las proporciones (2+3=5).";
+                let pA = 3 + (i % 3);
+                let pB = 5 + (i % 2);
+                let factorVol = i + 4;
+                let volTotal = (pA + pB) * factorVol;
+                preg = `La relación de volumen entre el reactivo reactante ácido y el destilado base dentro de una solución química balanceada responde a la razón geométrica de $$\\frac{${pA}}{${pB}}$$ Si el volumen neto de la mezcla homogénea final en el reactor alcanza los $${volTotal}\\text{ mL}$, ¿cuántos mililitros componen la sustancia de mayor volumen?`;
+                corr = `$${pB * factorVol}\\text{ mL}$`;
+                inc = [`$${pA * factorVol}\\text{ mL}$`, `$${volTotal}\\text{ mL}$`, `$${factorVol}\\text{ mL}$`];
+                just = `Planteamiento de la constante de proporcionalidad $k$: $${pA}k + ${pB}k = ${volTotal} \\Rightarrow ${pA + pB}k = ${volTotal} \\Rightarrow k = ${factorVol}$. El componente mayoritario es $${pB}k = ${pB} \\cdot ${factorVol} = ${pB * factorVol}$.`;
+                pist = "Determine la constante $k$ dividiendo el volumen absoluto entre la suma de las partes de la razón.";
                 break;
+
             case "PERMUTACIONES":
-                preg = `¿De cuántas maneras se pueden ocupar los cargos de Director y Subdirector en un comité integrado por ${i + 3} miembros elegibles?`;
-                corr = `${(i + 3) * (i + 2)}`;
-                inc = [`${i + 3}`, `${(i + 3) * 2}`, `${i * 2}`];
-                just = `Variación sin repetición donde el orden de los puestos importa: V(n, 2) = n * (n - 1).`;
-                pist = "El orden es relevante ya que los puestos tienen jerarquías distintas.";
+                let elementos = 5 + (i % 6);
+                preg = `¿De cuántas formas distintas, lineales y secuenciales se pueden ordenar e instalar $${elementos}$ módulos de memoria RAM de arquitecturas de procesamiento independientes en los slots maestros correlativos de un servidor de alta gama?`;
+                let factorial = 1;
+                for(let f=1; f<=elementos; f++) factorial *= f;
+                corr = `$${factorial}$ formas`;
+                inc = [`$${elementos * 2}$ formas`, `$${factorial - 24}$ formas`, `$${elementos}$ formas`];
+                just = `Dado que se deben ordenar la totalidad de los elementos en posiciones relativas diferenciadas, se aplica una permutación ordinaria: $P_{${elementos}} = ${elementos}! = ${factorial}$.`;
+                pist = "Cuando intervienen todos los elementos del conjunto y el orden posicional es un factor diferenciador, aplique factoriales.";
                 break;
-            default:
-                preg = `El consumo de combustible de un motor es directamente proporcional a la distancia recorrida. Si para 20 km consume ${i * 2} litros, ¿cuánto consumirá en 60 km?`;
-                corr = `${i * 6} L`;
-                inc = [`${i * 4} L`, `${i * 8} L`, `${i * 12} L`];
-                just = `Al triplicarse la distancia (de 20 km a 60 km), el consumo de diésel se triplica de forma directa: ${i * 2} * 3.`;
-                pist = "Establezca una regla de tres simple directa relacionando litros y km.";
+
+            default: // PROPORCIONALIDAD PURA
+                let distBase = 30 + i;
+                let tiempoBase = 2;
+                let nuevaDist = distBase * 3;
+                preg = `Un vehículo de prueba no tripulado se desplaza con velocidad constante y uniforme, cubriendo una distancia de $${distBase}\\text{ km}$ en un intervalo temporal controlado de $${tiempoBase}\\text{ horas}$. Manteniendo exactamente las mismas constantes cinemáticas, ¿en cuánto tiempo completará una trayectoria extendida de $${nuevaDist}\\text{ km}$?`;
+                corr = `$6\\text{ horas}$`;
+                inc = [`$4\\text{ horas}$`, `$8\\text{ horas}$`, `$5\\text{ horas}$`];
+                just = `La relación espacio-tiempo a velocidad constante es lineal y directamente proporcional: $\\frac{d_1}{t_1} = \\frac{d_2}{t_2} \\Rightarrow \\frac{${distBase}}{2} = \\frac{${nuevaDist}}{t_2}$. Al triplicarse la distancia, el tiempo escalar se triplica proporcionalmente.`;
+                pist = "Establezca una relación de proporcionalidad directa (una regla de tres simple lineal).";
         }
         bancoPreguntas.push({ id: i, cat: tema, preg: preg, corr: corr, inc: inc, just: just, pist: pist });
     }
@@ -120,7 +168,7 @@ function cargarPregunta(id) {
 
     document.getElementById("questionIdLabel").innerText = `Reactivo #${id.toString().padStart(3, '0')}`;
     document.getElementById("questionCategory").innerText = q.cat;
-    document.getElementById("questionText").innerText = q.preg;
+    document.getElementById("questionText").innerHTML = q.preg;
 
     if (!trackingComodines[id]) trackingComodines[id] = { usado5050: false, usadoTutor: false };
     document.getElementById("btn5050").disabled = trackingComodines[id].usado5050 || progresoExamen[id];
@@ -144,8 +192,16 @@ function cargarPregunta(id) {
         container.appendChild(btn);
     });
 
-    if (progresoExamen[id]) mostrarResultadoBloqueado(id);
-    else document.getElementById("feedbackPanel").classList.add("hidden");
+    if (progresoExamen[id]) {
+        mostrarResultadoBloqueado(id);
+    } else {
+        document.getElementById("feedbackPanel").classList.add("hidden");
+    }
+
+    // Forzar re-renderizado dinámico de MathJax para las nuevas expresiones cargadas
+    if (window.MathJax && window.MathJax.typeset) {
+        MathJax.typeset();
+    }
 }
 
 function verificarRespuesta(btn, esCorrecto, id) {
@@ -173,9 +229,13 @@ function mostrarResultadoBloqueado(id) {
     });
 
     document.getElementById("feedbackPanel").classList.remove("hidden");
-    document.getElementById("feedbackText").innerText = q.just;
+    document.getElementById("feedbackText").innerHTML = q.just;
     document.getElementById("btn5050").disabled = true;
     document.getElementById("btnTutor").disabled = true;
+
+    if (window.MathJax && window.MathJax.typeset) {
+        MathJax.typeset();
+    }
 }
 
 function ejecutarComodina5050() {
@@ -198,4 +258,8 @@ function ejecutarComodinarTutor() {
     const panel = document.getElementById("wildcardOutput");
     panel.classList.remove("hidden");
     panel.innerHTML = `💡 <strong>Pista del Tutor:</strong> ${q.pist}`;
+    
+    if (window.MathJax && window.MathJax.typeset) {
+        MathJax.typeset();
+    }
 }

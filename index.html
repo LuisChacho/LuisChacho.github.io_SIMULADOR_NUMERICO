@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Ciencias Exactas - 100 Reactivos Únicos</title>
     <link rel="stylesheet" href="index.css">
+    <!-- Motor MathJax para renderizado profesional de ecuaciones -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            },
+            chtml: {
+                displayAlign: 'left'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
     <header class="app-header">
